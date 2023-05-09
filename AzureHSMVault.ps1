@@ -86,10 +86,10 @@ enum AzureLocation {
 # - keyName                      = Envtools-Key
 # - Email                        = # your azure Email
 # ```
-#  Your_Key_Vault                  = 'https://azure.microsoft.com/en-us/services/key-vault/'
+#  Your_Key_Vault                = 'https://azure.microsoft.com/en-us/services/key-vault/'
 class HsmVault {
     [AzConfig] $config
-    static [PSCredential] $creds
+    [string] $credGuid
     [System.Security.Cryptography.X509Certificates.X509Certificate2]$Cert
     static hidden [bool]$IsSetup = [bool][int]$env:Is_HsmVault_Setup
 
@@ -97,7 +97,7 @@ class HsmVault {
         $this.config = [AzConfig]::New()
         $this.Cert = [System.Security.Cryptography.X509Certificates.X509Certificate2]::new()
         $this.Cert.Subject = "/C=LV/ST=Rwanda/L=1/O=$($this.config.CertName)/OU=IT"
-        $this.Authenticate()
+        $this.Authenticate(); $this.credGuid = [string][GuidHelper]::GetGuid($this)
     }
     HsmVault([string]$AzureVaultName, [AzureResourceGroup]$AzureResourceGroup, [string]$AzureSubscriptionID) {
         $this.config = [AzConfig]::New()
@@ -106,7 +106,7 @@ class HsmVault {
         $this.Config.AzureSubscriptionID = $AzureSubscriptionID
         $this.Cert = [System.Security.Cryptography.X509Certificates.X509Certificate2]::new()
         $this.Cert.Subject = "/C=LV/ST=Rwanda/L=1/O=$($this.config.CertName)/OU=IT"
-        $this.Authenticate()
+        $this.Authenticate(); $this.credGuid = [string][GuidHelper]::GetGuid($this)
     }
     [void] Setup() {
         # https://learn.microsoft.com/en-us/azure/key-vault/managed-hsm/quick-create-powershell
@@ -224,26 +224,32 @@ class HsmVault {
         if (![HsmVault]::IsSetup) {
             Write-Host '[HsmVault] Setting up an Azure Key Vault (One time only) ...' -ForegroundColor Green
             $this.Setup()
-        }; $null = [HsmVault]::RunAsync({ Login-AzAccount }, 'AzAccount login')
+        };
+        [HsmVault]::creds = [System.Management.Automation.PSCredential]::new($env:USERNAME, [securestring]::new())
+
+        # [HsmVault]::creds = Get-Credential -Message "Password protect your Pfx file" -Title "-----[| Pfx Password |]-----" -UserName $env:username
+        $null = [HsmVault]::RunAsync({ Login-AzAccount }, 'AzAccount login')
         Write-Host "[HsmVault] Azure account Authentication complete." -ForegroundColor Green
     }
     hidden [void] Createkey([string]$keyName) {
         Write-Host "[HsmVault] Creating HSM key ..." -ForegroundColor Green
         Add-AzKeyVaultKey -HsmName $this.config.hsmName -Name $keyName -Destination HSM
     }
-    static hidden [System.Security.Cryptography.X509Certificates.X509Certificate2] CreateCert([AzConfig]$AzConfig) {
+    static [System.Security.Cryptography.X509Certificates.X509Certificate2] CreateCert([AzConfig]$AzConfig) {
         if (!$AzConfig.PfxFile.Exists) {
             # Generate new certificate and convert it to pfx format
             $openssl = [HsmVault]::GetOpenssl().FullName
             &$openssl req -newkey rsa:2048 -new -nodes -x509 -days $AzConfig.CertExpirationDays -keyout $AzConfig.PrivateCertFile.FullName -out $AzConfig.PublicCertFile.FullName -subj "/C=LV/ST=Rwanda/L=1/O=$($AzConfig.CertName)/OU=IT"
-            [HsmVault]::creds = Get-Credential -Message "Password protect your Pfx file" -Title "-----[| Pfx Password |]-----" -UserName $env:username
+            if (!$?) { throw [System.Exception]::New('Unexpected error') }
             &$openssl pkcs12 -in $AzConfig.PublicCertFile.FullName -inkey $AzConfig.PrivateCertFile.FullName -export -out $AzConfig.PfxFile.FullName -passout pass:$([HsmVault]::creds.GetNetworkCredential().Password)
+            if (!$?) { throw [System.Exception]::New('Unexpected error') }
         }
-        return [HsmVault]::CreateCert($AzConfig.CertName, $AzConfig.PfxFile.FullName, [HsmVault]::creds.GetNetworkCredential().SecurePassword)
+        return [HsmVault]::CreateCert($AzConfig.CertName, $AzConfig.PfxFile, [HsmVault]::creds.GetNetworkCredential().SecurePassword)
     }
-    static hidden [System.Security.Cryptography.X509Certificates.X509Certificate2] CreateCert([string]$CertName, [string]$PfxPath, [securestring]$Password) {
+    static [System.Security.Cryptography.X509Certificates.X509Certificate2] CreateCert([string]$CertName, [IO.FileInfo]$PfxFile, [securestring]$Password) {
+        if (!$PfxFile.Exists) { $PfxFile = New-Item -Path $PfxFile.FullName -Type File -Force }
         # Creates and Stores X509Cert2 in certificate store
-        $X509Cert2 = [System.Security.Cryptography.X509Certificates.X509Certificate2]::new($PfxPath, $Password, [System.Security.Cryptography.X509Certificates.X509KeyStorageFlags]::Exportable);
+        $X509Cert2 = [System.Security.Cryptography.X509Certificates.X509Certificate2]::new($PfxFile.FullName, $Password, [System.Security.Cryptography.X509Certificates.X509KeyStorageFlags]::Exportable);
         $CertStore = [System.Security.Cryptography.X509Certificates.X509Store]::new([System.Security.Cryptography.X509Certificates.StoreName]::My, [System.Security.Cryptography.X509Certificates.StoreLocation]::CurrentUser);
         $CertStore.Open([System.Security.Cryptography.X509Certificates.OpenFlags]::ReadWrite);
         $X509Cert2.FriendlyName = $CertName;
@@ -513,36 +519,30 @@ class CfgList {
     }
 }
 class AzConfig : CfgList {
-    [AzureResourceGroup]$AzureResourceGroup
-    [string]$AzureServicePrincipalAppName
-    [string]$AzureSubscriptionName
+    [ValidateNotNullOrEmpty()][AzureResourceGroup]$AzureResourceGroup
+    [ValidateNotNullOrEmpty()][string]$AzureServicePrincipalAppName
+    [ValidateNotNullOrEmpty()][string]$AzureSubscriptionName
+    [ValidateNotNullOrEmpty()][string]$AzureSubscriptionID
+    [ValidateRange(1, 73000)][int]$CertExpirationDays
+    [ValidateNotNullOrEmpty()][string]$AzureVaultName
+    [ValidateNotNullOrEmpty()][string]$AzureTenantID
+    [ValidateNotNullOrEmpty()][string]$CertName
+    [ValidateNotNullOrEmpty()][string]$hsmName
+    [ValidateNotNullOrEmpty()][string]$keyName
     [IO.FileInfo]$PrivateCertFile
     [IO.FileInfo]$PublicCertFile
-    [string]$AzureSubscriptionID
-    [int]$CertExpirationDays
     [bool]$KeepLocalPfxFiles
-    [string]$AzureVaultName
-    [string]$AzureTenantID
     [IO.FileInfo]$PfxFile
-    [string]$CertPath
-    [string]$CertName
-    [string]$hsmName
-    [string]$keyName
     [Email]$Email
 
     AzConfig() {
-        $this.CertPath = $(if ([bool](Get-Variable IsWindows -ValueOnly -ErrorAction Ignore)) {
-                [IO.Path]::Combine($env:CommonProgramFiles, 'SSL', 'Private')
-            } else { '/etc/ssl/private/' }
-        )
-        if ($this.AzureLocation) { $this.AzureResourceGroup.Location = [AzureLocation]$this.AzureLocation }
         $env = [System.IO.FileInfo]::New([IO.Path]::Combine($(Get-Variable executionContext -ValueOnly).SessionState.Path.CurrentLocation.Path, '.env'))
-        if ($env.Exists) { $this.Set($env.FullName) }; ('PublicCertFile', 'PrivateCertFile', 'PfxFile').ForEach({ if (!$this."$_") { $this."$_" = [IO.FileInfo]::new([char]8) } })
+        if ($env.Exists) { $this.Set($env.FullName) }; $this.SetCertPath(); if ($this.AzureLocation) { $this.AzureResourceGroup.Location = [AzureLocation]$this.AzureLocation }
     }
     hidden [void] Set([string]$key, $value) {
         [ValidateNotNullOrEmpty()][string]$key = $key
         [ValidateNotNullOrEmpty()][System.Object]$value = $value
-        if ($this.PsObject.Properties.$key -and $key -eq 'CertPath') {
+        if ($key.ToLower() -eq 'certpath') {
             $this.SetCertPath($value)
         } elseif ($this.psObject.Properties.Name.Contains([string]$key)) {
             $this."$key" = $value
@@ -570,11 +570,49 @@ class AzConfig : CfgList {
         )
         $this.Set($dict);
     }
-    hidden [void] SetCertPath([string]$Path) {
-        $this.CertPath = $Path
-        $this.PrivateCertFile = [IO.FileInfo][IO.Path]::Combine($this.CertPath, $this.CertName + 'key.pem');
-        $this.PublicCertFile = [IO.FileInfo][IO.Path]::Combine($this.CertPath, $this.CertName + 'cert.pem')
-        $this.PfxFile = [IO.FileInfo][IO.Path]::Combine($this.CertPath, $this.CertName + '.pfx')
+    hidden [void] SetCertPath() {
+        $this.SetCertPath($(if ([bool](Get-Variable IsLinux -ValueOnly -ErrorAction Ignore) -or [bool](Get-Variable IsMacOS -ValueOnly -ErrorAction Ignore)) {
+                    '/etc/ssl/private/'
+                } elseif ([bool](Get-Variable IsWindows -ValueOnly -ErrorAction Ignore)) {
+                    [IO.Path]::Combine($env:CommonProgramFiles, 'SSL', 'Private')
+                } else {
+                    $PSScriptRoot
+                }
+            )
+        )
+    }
+    hidden [void] SetCertPath([string]$CertPath) {
+        $this.PrivateCertFile = [IO.FileInfo][IO.Path]::Combine($CertPath, "$($this.CertName).key.pem");
+        $this.PublicCertFile = [IO.FileInfo][IO.Path]::Combine($CertPath, "$($this.CertName).cert.pem")
+        $this.PfxFile = [IO.FileInfo][IO.Path]::Combine($CertPath, "$($this.CertName).pfx")
     }
 }
 
+# .SYNOPSIS
+# GuidHelper
+# .NOTES
+# /!\ Does not create real guids; just looks like it :)
+# Used mainly to create unique object names with a little bit of info added.
+class GuidHelper {
+    static [guid] GetGuid($Source) {
+        $hash = $Source.GetHashCode().ToString()
+        return [guid]::new([System.BitConverter]::ToString([System.Text.Encoding]::UTF8.GetBytes(([string]::Concat(([char[]](97..102 + 65..70) | Get-Random -Count (16 - $hash.Length))) + $hash))).Replace("-", "").ToLower().Insert(8, "-").Insert(13, "-").Insert(18, "-").Insert(23, "-"))
+    }
+    static [bool] VerifyGuid([guid]$guid, $Source) {
+        return $Source.GetHashCode() -match $([string]::Concat([System.Text.Encoding]::UTF8.GetString($( {
+                            param([string]$HexString)
+                            $outputLength = $HexString.Length / 2;
+                            $output = [byte[]]::new($outputLength);
+                            $numeral = [char[]]::new(2);
+                            for ($i = 0; $i -lt $outputLength; $i++) {
+                                $HexString.CopyTo($i * 2, $numeral, 0, 2);
+                                $output[$i] = [Convert]::ToByte([string]::new($numeral), 16);
+                            }
+                            return $output;
+                        }.Invoke($guid.ToString().Replace('-', ''))
+                    )
+                ).ToCharArray().Where({ $_ -as [int] -notin (97..102 + 65..70) })
+            )
+        )
+    }
+}
