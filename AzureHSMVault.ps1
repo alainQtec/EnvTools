@@ -63,35 +63,43 @@ enum AzureLocation {
     WestUS3
     # See Azure [documentation](https://learn.microsoft.com/en-us/dotnet/api/azure.core.azurelocation) for the exhaustive list
 }
-#region    KVManagedHsm
+#region    HsmVault
 # .SYNOPSIS
-#  KVManagedHsm. A class to Interact with Azure Key Vault Managed
-#  (KV : KeyVault. HSM : Hardware Security Module.)
+#  HsmVault is a class to Interact with Azure Key Vault's Managed HSM (Hardware Security Module).
 # .DESCRIPTION
-#  This class to interact with the Azure Key Vault Managed HSM service. You can use it to create, read, update, and delete keys and secrets stored in the HSM.
+#  This class to interact with the Azure Key Vault's Managed HSM service. You can use it to create, read, update, and delete keys and secrets stored in the HSM.
 #  I mainly use it to Retrieve AES Keys from Azure Key Vault. ie: https://www.gavsto.com/msp-powershell-for-beginners-part-2-securely-store-credentials-passwords-api-keys-and-secrets/
 # .EXAMPLE
-# $hsmCl = [KVManagedHsm]::new()
+# $hsmCl = [HsmVault]::new()
 # .NOTES
 # If you do not have an Azure subscription, create a [free account](https://azure.microsoft.com/free/?WT.mc_id=A261C142F) before using this class.
-# .LINK
-#  Your_Subscription_and_Tenant_Id = 'https://learn.microsoft.com/en-us/azure/azure-portal/get-subscription-tenant-id'
-#  Create_your_Az_Subscription     = 'https://portal.azure.com/#view/Microsoft_Azure_SubscriptionManagement/SubscriptionCreateBlade' # AZURE SUBSCRIPTION NAME FORMAT: <Company>-<Department>-sub-<Environment>
+# Make sure your .env file has the following keys not empty:
+# ```yaml
+# - AzureServicePrincipalAppName = Envtools
+# - AzureSubscriptionName        = # Create your Az Subscription : 'https://portal.azure.com/#view/Microsoft_Azure_SubscriptionManagement/SubscriptionCreateBlade' # AZURE SUBSCRIPTION NAME FORMAT: <Company>-<Department>-sub-<Environment>
+# - AzureSubscriptionID          = # GET One: 'https://learn.microsoft.com/en-us/azure/azure-portal/get-subscription-tenant-id'
+# - AzureResourceGroup           = # Name Your ResGroup
+# - AzureVaultName               = # Name the vault to use
+# - AzureTenantID                = # GET One: 'https://learn.microsoft.com/en-us/azure/azure-portal/get-subscription-tenant-id'
+# - CertName                     = Envtools-cert
+# - hsmName                      = Envtools-Hsm
+# - keyName                      = Envtools-Key
+# - Email                        = # your azure Email
+# ```
 #  Your_Key_Vault                  = 'https://azure.microsoft.com/en-us/services/key-vault/'
-#  Your_HSM_Name                   = ''
-class KVManagedHsm {
+class HsmVault {
     [AzConfig] $config
-    [PSCredential] $creds
+    static [PSCredential] $creds
     [System.Security.Cryptography.X509Certificates.X509Certificate2]$Cert
-    static hidden [bool]$IsSetup = [bool][int]$env:Is_KVManagedHsm_Setup
+    static hidden [bool]$IsSetup = [bool][int]$env:Is_HsmVault_Setup
 
-    KVManagedHsm() {
+    HsmVault() {
         $this.config = [AzConfig]::New()
         $this.Cert = [System.Security.Cryptography.X509Certificates.X509Certificate2]::new()
         $this.Cert.Subject = "/C=LV/ST=Rwanda/L=1/O=$($this.config.CertName)/OU=IT"
         $this.Authenticate()
     }
-    KVManagedHsm([string]$AzureVaultName, [AzureResourceGroup]$AzureResourceGroup, [string]$AzureSubscriptionID) {
+    HsmVault([string]$AzureVaultName, [AzureResourceGroup]$AzureResourceGroup, [string]$AzureSubscriptionID) {
         $this.config = [AzConfig]::New()
         $this.Config.AzureVaultName = $AzureVaultName
         $this.Config.AzureResourceGroup = $AzureResourceGroup
@@ -102,21 +110,21 @@ class KVManagedHsm {
     }
     [void] Setup() {
         # https://learn.microsoft.com/en-us/azure/key-vault/managed-hsm/quick-create-powershell
-        $null = [KVManagedHsm]::RunAsync({ $AzIsnotInstalled = $null -eq (Get-Module -ListAvailable az)[0];
+        $null = [HsmVault]::RunAsync({ $AzIsnotInstalled = $null -eq (Get-Module -ListAvailable az)[0];
                 if ($AzIsnotInstalled) { Install-Module -Name Az -AllowClobber -Scope AllUsers };
                 Enable-AzureRmAlias
             }, 'Enable Aliases from the previous Azure RM'
         )
-        $null = [KVManagedHsm]::RunAsync({ Connect-AzAccount }, 'Connect-AzAccount, Waiting the Browser ...')
-        $null = [KVManagedHsm]::RunAsync({ Set-AzContext -SubscriptionName $this.config.AzureSubscriptionName; New-AzResourceGroup -Name $this.config.AzureResourceGroup.Name -Location $this.config.AzureResourceGroup.Location.ToString() }, 'Set resource Group')
-        $principalId = [KVManagedHsm]::RunAsync({ (Get-AzADUser -UserPrincipalName $this.config.Email.Address).Id }, 'Getting your principal ID ...')
-        Write-Host "[ManagedHsm] Creating a managed HSM .." -ForegroundColor Green
+        $null = [HsmVault]::RunAsync({ Connect-AzAccount }, 'Connect-AzAccount, Waiting the Browser ...')
+        $null = [HsmVault]::RunAsync({ Set-AzContext -SubscriptionName $this.config.AzureSubscriptionName; New-AzResourceGroup -Name $this.config.AzureResourceGroup.Name -Location $this.config.AzureResourceGroup.Location.ToString() }, 'Set resource Group')
+        $principalId = [HsmVault]::RunAsync({ (Get-AzADUser -UserPrincipalName $this.config.Email.Address).Id }, 'Getting your principal ID ...')
+        Write-Host "[HsmVault] Creating a managed HSM .." -ForegroundColor Green
 
-        $null = [KVManagedHsm]::RunAsync({ New-AzKeyVaultManagedHsm -AzureResourceGroup $this.config.AzureResourceGroup.Name -Name $this.config.hsmName -Location $this.config.location -Sku Standard_B1 -Administrators $principalId }, 'Creating a managed HSM ...')
-        Write-Host "[ManagedHsm] Generate a certificate locally which will be used to Authenticate" -ForegroundColor Green
-        $_crt = $this.CreateCert(); $keyValue = [System.Convert]::ToBase64String($_crt.GetRawCertData())
+        $null = [HsmVault]::RunAsync({ New-AzKeyVaultManagedHsm -AzureResourceGroup $this.config.AzureResourceGroup.Name -Name $this.config.hsmName -Location $this.config.location -Sku Standard_B1 -Administrators $principalId }, 'Creating a managed HSM ...')
+        Write-Host "[HsmVault] Generate a certificate locally which will be used to Authenticate" -ForegroundColor Green
+        $_crt = [HsmVault]::CreateCert($this.config); $keyValue = [System.Convert]::ToBase64String($_crt.GetRawCertData())
 
-        $sp = [KVManagedHsm]::RunAsync({
+        $sp = [HsmVault]::RunAsync({
                 New-AzADServicePrincipal -DisplayName $this.config.AzureServicePrincipalAppName -CertValue $keyValue -EndDate $_crt.NotAfter -StartDate $_crt.NotBefore
                 (Get-AzSubscription -SubscriptionName $this.config.AzureSubscriptionName).TenantId
                 # How do I know that the service principal has succesfully propagated in Azure???
@@ -125,10 +133,10 @@ class KVManagedHsm {
             'Generate a service principal (Application) that we will use to Authenticate with'
         )
         $null = $this.config.Set('ApplicationId', $sp.ApplicationId.Guid)
-        $null = [KVManagedHsm]::RunAsync({ New-AzRoleAssignment -RoleDefinitionName Reader -ServicePrincipalName $sp.ApplicationId -ResourceGroupName $this.config.AzureResourceGroup.Name -ResourceType "Microsoft.KeyVault/vaults" -ResourceName $this.config.hsmName }, 'Assign the appropriate role to the service principal ...')
-        $null = [KVManagedHsm]::RunAsync({ Set-AzKeyVaultAccessPolicy -VaultName $this.config.hsmName -ObjectId $sp.id -PermissionsToSecrets Get, Set }, 'Set the appropriate access to the secrets for the application ...')
+        $null = [HsmVault]::RunAsync({ New-AzRoleAssignment -RoleDefinitionName Reader -ServicePrincipalName $sp.ApplicationId -ResourceGroupName $this.config.AzureResourceGroup.Name -ResourceType "Microsoft.KeyVault/vaults" -ResourceName $this.config.hsmName }, 'Assign the appropriate role to the service principal ...')
+        $null = [HsmVault]::RunAsync({ Set-AzKeyVaultAccessPolicy -VaultName $this.config.hsmName -ObjectId $sp.id -PermissionsToSecrets Get, Set }, 'Set the appropriate access to the secrets for the application ...')
 
-        Set-Item -Path ([IO.Path]::Combine('Env:', 'Is_KVManagedHsm_Setup')) -Value 1 -Force
+        Set-Item -Path ([IO.Path]::Combine('Env:', 'Is_HsmVault_Setup')) -Value 1 -Force
         Write-Host ''
         Write-Host -ForegroundColor Blue "Tenant ID: $($this.config.AzureTenantID)"
         Write-Host -ForegroundColor Blue "Application ID: $($this.config.ApplicationId)"
@@ -136,34 +144,34 @@ class KVManagedHsm {
         Write-Host -ForegroundColor Blue "Certificate Subject Name: 'CN=ImpactKeyVault'"
         Disconnect-AzAccount
     }
-    [KVMHsmKey] GetKey([string]$keyName) {
+    [HsmKey] GetKey([string]$keyName) {
         # Construct the request URL
         $url = "https://$($this.Config.AzureVaultName).managedhsm.azure.net/keys/$($keyName)?api-version=2021-04-01"
 
         # Make the API request
         $response = Invoke-RestMethod -Uri $url -Headers @{ "Authorization" = "Bearer $(Get-AzAccessToken -ResourceUrl $([string]::Concat('https://', $($this.Config.AzureVaultName, '.managedhsm.azure.net')))).Token" } -Method GET
 
-        # Create a KVMHsmKey object from the response
-        $key = [KVMHsmKey]::new()
+        # Create a HsmKey object from the response
+        $key = [HsmKey]::new()
         $key.KeyName = $response.name
         $key.KeyType = $response.kty
         $key.KeyOperations = $response.key_ops
         $key.Key = $response.key
         return $key
     }
-    [KVMHsmSecret] GetSecret([string]$secretName) {
+    [HsmSecret] GetSecret([string]$secretName) {
         # Construct the request URL
         $url = "https://$($this.Config.AzureVaultName).managedhsm.azure.net/secrets/$($secretName)?api-version=2021-04-01"
 
         # Make the API request
         $response = Invoke-RestMethod -Uri $url -Headers @{ "Authorization" = "Bearer $(Get-AzAccessToken -ResourceUrl https://$($this.Config.AzureVaultName).managedhsm.azure.net).Token" } -Method GET
-        # Create a KVMHsmSecret object from the response
-        $secret = [KVMHsmSecret]::new()
+        # Create a HsmSecret object from the response
+        $secret = [HsmSecret]::new()
         $secret.SecretName = $response.name
         $secret.Value = $response.value
         return $secret
     }
-    [KVMHsmKeyOperationResult] Decrypt([string]$keyName, [byte[]]$data) {
+    [HsmKeyOperationResult] Decrypt([string]$keyName, [byte[]]$data) {
         # Construct the request URL
         $url = "https://$($this.Config.AzureVaultName).managedhsm.azure.net/keys/$keyName/decrypt?api-version=2021-04-01"
 
@@ -175,13 +183,13 @@ class KVManagedHsm {
         # Make the API request
         $response = Invoke-RestMethod -Uri $url -Headers @{ "Authorization" = "Bearer $(Get-AzAccessToken -ResourceUrl https://$($this.Config.AzureVaultName).managedhsm.azure.net).Token" } -Method POST -Body (ConvertTo-Json $body)
 
-        # Create a KVMHsmKeyOperationResult object from the response
-        $result = [KVMHsmKeyOperationResult]::new()
+        # Create a HsmKeyOperationResult object from the response
+        $result = [HsmKeyOperationResult]::new()
         $result.Result = [Convert]::FromBase64String($response.result)
         return $result
     }
 
-    [KVMHsmSecretOperationResult] SetSecret([string]$secretName, [string]$value) {
+    [HsmSecretOperationResult] SetSecret([string]$secretName, [string]$value) {
         # Construct the request URL
         $url = "https://$($this.Config.AzureVaultName).managedhsm.azure.net/secrets/$($secretName)?api-version=2021-04-01"
         # Construct the request body
@@ -191,8 +199,8 @@ class KVManagedHsm {
         # Make the API request
         $response = Invoke-RestMethod -Uri $url -Headers @{ "Authorization" = "Bearer $(Get-AzAccessToken -ResourceUrl https://$($this.Config.AzureVaultName).managedhsm.azure.net).Token" } -Method PUT -Body (ConvertTo-Json $body)
 
-        # Create a KVMHsmSecretOperationResult object from the response
-        $result = [KVMHsmSecretOperationResult]::new()
+        # Create a HsmSecretOperationResult object from the response
+        $result = [HsmSecretOperationResult]::new()
         $result.SecretName = $response.name
         $result.Version = $response.version
         return $result
@@ -204,41 +212,41 @@ class KVManagedHsm {
         $PsInstance = [System.Management.Automation.PowerShell]::Create().AddScript($command)
         $job = $PsInstance.BeginInvoke(); while (!$job.IsCompleted) {
             $ProgressPercent = if ([int]$job.TotalTime.TotalMilliseconds -ne 0) { [int]($job.RemainingTime.TotalMilliseconds / $job.TotalTime.TotalMilliseconds * 100) } else { 100 }
-            Write-Progress -Activity "[KVManagedHsm]" -Status "$StatusMsg" -PercentComplete $ProgressPercent
+            Write-Progress -Activity "[HsmVault]" -Status "$StatusMsg" -PercentComplete $ProgressPercent
             Start-Sleep -Milliseconds 100
         }
-        Write-Progress -Activity "[KVManagedHsm]" -Status "command Complete." -PercentComplete 100
+        Write-Progress -Activity "[HsmVault]" -Status "command Complete." -PercentComplete 100
         $Comdresult = $PsInstance.EndInvoke($job)
         $PsInstance.Dispose();
         return $Comdresult
     }
     hidden [void] Authenticate() {
-        if (![KVManagedHsm]::IsSetup) {
-            Write-Host '[ManagedHsm] Setting up an Azure Key Vault (One time only) ...' -ForegroundColor Green
+        if (![HsmVault]::IsSetup) {
+            Write-Host '[HsmVault] Setting up an Azure Key Vault (One time only) ...' -ForegroundColor Green
             $this.Setup()
-        }; $null = [KVManagedHsm]::RunAsync({ Login-AzAccount }, 'AzAccount login')
-        Write-Host "[ManagedHsm] Azure account Authentication complete." -ForegroundColor Green
+        }; $null = [HsmVault]::RunAsync({ Login-AzAccount }, 'AzAccount login')
+        Write-Host "[HsmVault] Azure account Authentication complete." -ForegroundColor Green
     }
     hidden [void] Createkey([string]$keyName) {
-        Write-Host "[ManagedHsm] Creating HSM key ..." -ForegroundColor Green
+        Write-Host "[HsmVault] Creating HSM key ..." -ForegroundColor Green
         Add-AzKeyVaultKey -HsmName $this.config.hsmName -Name $keyName -Destination HSM
     }
-    hidden [System.Security.Cryptography.X509Certificates.X509Certificate2] CreateCert() {
-        if (!$this.config.PfxFile.Exists) {
+    static hidden [System.Security.Cryptography.X509Certificates.X509Certificate2] CreateCert([AzConfig]$AzConfig) {
+        if (!$AzConfig.PfxFile.Exists) {
             # Generate new certificate and convert it to pfx format
-            $openssl = $this.GetOpenssl().FullName
-            &$openssl req -newkey rsa:2048 -new -nodes -x509 -days $this.config.CertExpirationDays -keyout $this.config.PrivateCertFile.FullName -out $this.config.PublicCertFile.FullName -subj $this.Cert.Subject
-            $this.creds = Get-Credential -Message "Password protect your Pfx file" -Title "-----[| Pfx Password |]-----" -UserName $env:username
-            &$openssl pkcs12 -in $this.config.PublicCertFile.FullName -inkey $this.config.PrivateCertFile.FullName -export -out $this.config.PfxFile.FullName -passout pass:$($this.creds.GetNetworkCredential().Password)
+            $openssl = [HsmVault]::GetOpenssl().FullName
+            &$openssl req -newkey rsa:2048 -new -nodes -x509 -days $AzConfig.CertExpirationDays -keyout $AzConfig.PrivateCertFile.FullName -out $AzConfig.PublicCertFile.FullName -subj "/C=LV/ST=Rwanda/L=1/O=$($AzConfig.CertName)/OU=IT"
+            [HsmVault]::creds = Get-Credential -Message "Password protect your Pfx file" -Title "-----[| Pfx Password |]-----" -UserName $env:username
+            &$openssl pkcs12 -in $AzConfig.PublicCertFile.FullName -inkey $AzConfig.PrivateCertFile.FullName -export -out $AzConfig.PfxFile.FullName -passout pass:$([HsmVault]::creds.GetNetworkCredential().Password)
         }
-        return $this.CreateCert($this.config.PfxFile.FullName, $this.creds.GetNetworkCredential().SecurePassword)
+        return [HsmVault]::CreateCert($AzConfig.CertName, $AzConfig.PfxFile.FullName, [HsmVault]::creds.GetNetworkCredential().SecurePassword)
     }
-    hidden [System.Security.Cryptography.X509Certificates.X509Certificate2] CreateCert([string]$PfxPath, [securestring]$Password) {
+    static hidden [System.Security.Cryptography.X509Certificates.X509Certificate2] CreateCert([string]$CertName, [string]$PfxPath, [securestring]$Password) {
         # Creates and Stores X509Cert2 in certificate store
-        $X509Cert2 = [System.Security.Cryptography.X509Certificates.X509Certificate2]::new($PfxPath, $Password, [System.Security.Cryptography.X509Certificates.X509KeyStorageFlags]::Exportable)
-        $CertStore = [System.Security.Cryptography.X509Certificates.X509Store]::new([System.Security.Cryptography.X509Certificates.StoreName]::My, [System.Security.Cryptography.X509Certificates.StoreLocation]::CurrentUser)
-        $CertStore.Open([System.Security.Cryptography.X509Certificates.OpenFlags]::ReadWrite)
-        $X509Cert2.FriendlyName = $this.config.AzureTenantID + '-cert';
+        $X509Cert2 = [System.Security.Cryptography.X509Certificates.X509Certificate2]::new($PfxPath, $Password, [System.Security.Cryptography.X509Certificates.X509KeyStorageFlags]::Exportable);
+        $CertStore = [System.Security.Cryptography.X509Certificates.X509Store]::new([System.Security.Cryptography.X509Certificates.StoreName]::My, [System.Security.Cryptography.X509Certificates.StoreLocation]::CurrentUser);
+        $CertStore.Open([System.Security.Cryptography.X509Certificates.OpenFlags]::ReadWrite);
+        $X509Cert2.FriendlyName = $CertName;
         $CertStore.Add($X509Cert2)
         $CertStore.Close()
         return $X509Cert2
@@ -271,7 +279,7 @@ class KVManagedHsm {
         $CertStore.Close()
         return $this.Cert.Thumbprint
     }
-    [IO.FileInfo] GetOpenssl () {
+    static [IO.FileInfo] GetOpenssl () {
         # Return the path to openssl executable file + Will install it if not found.
         $res = [IO.FileInfo](Get-Command -Name OpenSSL -Type Application -ErrorAction Ignore).Source
         if (!$res -or !$res.Exists) {
@@ -289,13 +297,13 @@ class KVManagedHsm {
         return $Sec
     }
 }
-#endregion KVManagedHsm
+#endregion HsmVault
 
 # .SYNOPSIS
-# KVMHsmKey
+# HsmKey
 # .DESCRIPTION
 # This class represents a key stored in the Azure Key Vault Managed HSM. You can use it to perform cryptographic operations like encryption and decryption.
-class KVMHsmKey {
+class HsmKey {
     [string] $Name
     [string] $Type # (e.g. RSA, EC).
     [string] $CurveName # The name of the elliptic curve used for EC keys.
@@ -303,7 +311,7 @@ class KVMHsmKey {
     [string] $KeyOps
     [string] $KeyAttributes # The attributes of the key (e.g. enabled, notBefore, expires).
 
-    KVMHsmKey([string]$name, [string]$type, [string]$curveName, [int]$keySize, [string]$keyOps, [string]$keyAttributes) {
+    HsmKey([string]$name, [string]$type, [string]$curveName, [int]$keySize, [string]$keyOps, [string]$keyAttributes) {
         $this.Name = $name
         $this.Type = $type
         $this.CurveName = $curveName
@@ -314,15 +322,15 @@ class KVMHsmKey {
 }
 
 # .SYNOPSIS
-# KVMHsmSecret Class
+# HsmSecret Class
 # .DESCRIPTION
 # This class represents a key stored in the Azure Key Vault Managed HSM. You can use it to perform cryptographic operations like encryption and decryption.
-class KVMHsmSecret {
+class HsmSecret {
     [string] $Name
     [string] $ContentType
     [string] $SecretAttributes
 
-    KVMHsmSecret([string]$name, [string]$contentType, [string]$secretAttributes) {
+    HsmSecret([string]$name, [string]$contentType, [string]$secretAttributes) {
         $this.Name = $name
         $this.ContentType = $contentType
         $this.SecretAttributes = $secretAttributes
@@ -330,18 +338,18 @@ class KVMHsmSecret {
 }
 
 # .SYNOPSIS
-# KVMHsmKeyOperationResult Class
+# HsmKeyOperationResult Class
 # .DESCRIPTION
 # This class represents the result of a cryptographic operation performed on a key in the Azure Key Vault Managed HSM.
-class KVMHsmKeyOperationResult {
+class HsmKeyOperationResult {
     [SecureString] $Key
     [string] $Algorithm
     [string] $Operation
     [string] $Result
     [string] $Message
 
-    KVMHsmKeyOperationResult([string]$key, [string]$algorithm, [string]$operation, [string]$result, [string]$message) {
-        $this.Key = [KVManagedHsm]::ConvertToSecureString($key)
+    HsmKeyOperationResult([string]$key, [string]$algorithm, [string]$operation, [string]$result, [string]$message) {
+        $this.Key = [HsmVault]::ConvertToSecureString($key)
         $this.Algorithm = $algorithm
         $this.Operation = $operation
         $this.Result = $result
@@ -351,16 +359,16 @@ class KVMHsmKeyOperationResult {
 
 
 # .SYNOPSIS
-# KVMHsmSecretOperationResult Class
+# HsmSecretOperationResult Class
 # .DESCRIPTION
 # This class represents the result of an operation performed on a secret in the Azure Key Vault Managed HSM.
-class KVMHsmSecretOperationResult {
+class HsmSecretOperationResult {
     [string] $Secret
     [string] $Operation
     [string] $Result
     [string] $Message
 
-    KVMHsmSecretOperationResult([string]$secret, [string]$operation, [string]$result, [string]$message) {
+    HsmSecretOperationResult([string]$secret, [string]$operation, [string]$result, [string]$message) {
         $this.Secret = $secret
         $this.Operation = $operation
         $this.Result = $result
@@ -529,7 +537,7 @@ class AzConfig : CfgList {
         )
         if ($this.AzureLocation) { $this.AzureResourceGroup.Location = [AzureLocation]$this.AzureLocation }
         $env = [System.IO.FileInfo]::New([IO.Path]::Combine($(Get-Variable executionContext -ValueOnly).SessionState.Path.CurrentLocation.Path, '.env'))
-        if ($env.Exists) { $this.Set($env.FullName) }
+        if ($env.Exists) { $this.Set($env.FullName) }; ('PublicCertFile', 'PrivateCertFile', 'PfxFile').ForEach({ if (!$this."$_") { $this."$_" = [IO.FileInfo]::new([char]8) } })
     }
     hidden [void] Set([string]$key, $value) {
         [ValidateNotNullOrEmpty()][string]$key = $key
