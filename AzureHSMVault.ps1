@@ -63,6 +63,19 @@ enum AzureLocation {
     WestUS3
     # See Azure [documentation](https://learn.microsoft.com/en-us/dotnet/api/azure.core.azurelocation) for the exhaustive list
 }
+enum ECCurveName {
+    ansix9p256r1
+    ansix9p384r1
+    ansix9p521r1
+    brainpoolP256r1
+    brainpoolP384r1
+    brainpoolP512r1
+    nistP256
+    nistP384
+    nistP521
+    secp256k1
+}
+
 #region    HsmVault
 # .SYNOPSIS
 #  HsmVault is a class to Interact with Azure Key Vault's Managed HSM (Hardware Security Module).
@@ -89,24 +102,21 @@ enum AzureLocation {
 #  Your_Key_Vault                = 'https://azure.microsoft.com/en-us/services/key-vault/'
 class HsmVault {
     [AzConfig] $config
-    [string] $credGuid
     [System.Security.Cryptography.X509Certificates.X509Certificate2]$Cert
     static hidden [bool]$IsSetup = [bool][int]$env:Is_HsmVault_Setup
 
     HsmVault() {
-        $this.config = [AzConfig]::New()
-        $this.Cert = [System.Security.Cryptography.X509Certificates.X509Certificate2]::new()
-        $this.Cert.Subject = "/C=LV/ST=Rwanda/L=1/O=$($this.config.CertName)/OU=IT"
-        $this.Authenticate(); $this.credGuid = [string][GuidHelper]::GetGuid($this)
+        $this.config = [AzConfig]::New();
+        $this.Cert = [HsmVault]::CreateSelfSignedCertificate("C=LV/ST=Earth/L=1/O=$($this.config.CertName)/OU=IT", [ECCurveName]::nistP521);
+        $this.Authenticate();
     }
     HsmVault([string]$AzureVaultName, [AzureResourceGroup]$AzureResourceGroup, [string]$AzureSubscriptionID) {
-        $this.config = [AzConfig]::New()
+        $this.config = [AzConfig]::New();
         $this.Config.AzureVaultName = $AzureVaultName
         $this.Config.AzureResourceGroup = $AzureResourceGroup
         $this.Config.AzureSubscriptionID = $AzureSubscriptionID
-        $this.Cert = [System.Security.Cryptography.X509Certificates.X509Certificate2]::new()
-        $this.Cert.Subject = "/C=LV/ST=Rwanda/L=1/O=$($this.config.CertName)/OU=IT"
-        $this.Authenticate(); $this.credGuid = [string][GuidHelper]::GetGuid($this)
+        $this.Cert = [HsmVault]::CreateSelfSignedCertificate("C=LV/ST=Earth/L=1/O=$($this.config.CertName)/OU=IT", [ECCurveName]::nistP521);
+        $this.Authenticate();
     }
     [void] Setup() {
         # https://learn.microsoft.com/en-us/azure/key-vault/managed-hsm/quick-create-powershell
@@ -122,7 +132,7 @@ class HsmVault {
 
         $null = [HsmVault]::RunAsync({ New-AzKeyVaultManagedHsm -AzureResourceGroup $this.config.AzureResourceGroup.Name -Name $this.config.hsmName -Location $this.config.location -Sku Standard_B1 -Administrators $principalId }, 'Creating a managed HSM ...')
         Write-Host "[HsmVault] Generate a certificate locally which will be used to Authenticate" -ForegroundColor Green
-        $_crt = [HsmVault]::CreateCert($this.config); $keyValue = [System.Convert]::ToBase64String($_crt.GetRawCertData())
+        $_crt = [HsmVault]::CreateSelfSignedCertificate($this.config, $this.GetSessionId().ToString()); $keyValue = [System.Convert]::ToBase64String($_crt.GetRawCertData())
 
         $sp = [HsmVault]::RunAsync({
                 New-AzADServicePrincipal -DisplayName $this.config.AzureServicePrincipalAppName -CertValue $keyValue -EndDate $_crt.NotAfter -StartDate $_crt.NotBefore
@@ -188,7 +198,6 @@ class HsmVault {
         $result.Result = [Convert]::FromBase64String($response.result)
         return $result
     }
-
     [HsmSecretOperationResult] SetSecret([string]$secretName, [string]$value) {
         # Construct the request URL
         $url = "https://$($this.Config.AzureVaultName).managedhsm.azure.net/secrets/$($secretName)?api-version=2021-04-01"
@@ -225,37 +234,24 @@ class HsmVault {
             Write-Host '[HsmVault] Setting up an Azure Key Vault (One time only) ...' -ForegroundColor Green
             $this.Setup()
         };
-        [HsmVault]::creds = [System.Management.Automation.PSCredential]::new($env:USERNAME, [securestring]::new())
-
-        # [HsmVault]::creds = Get-Credential -Message "Password protect your Pfx file" -Title "-----[| Pfx Password |]-----" -UserName $env:username
+        [HsmVault]::SetSessionCreds($this.GetSessionId())
         $null = [HsmVault]::RunAsync({ Login-AzAccount }, 'AzAccount login')
         Write-Host "[HsmVault] Azure account Authentication complete." -ForegroundColor Green
+    }
+    static [void] SetSessionCreds([guid]$sessionId) {
+        [HsmVault]::SetSessionCreds([guid]$sessionId, $false)
+    }
+    static [void] SetSessionCreds([guid]$sessionId, [bool]$Force) {
+        if (![string]::IsNullOrWhiteSpace([System.Environment]::GetEnvironmentVariable("$sessionId"))) {
+            if (!$Force) {
+                return
+            }
+        }
+        [System.Environment]::SetEnvironmentVariable("$sessionId", $((Get-Credential -Message "Enter your Pfx Password" -Title "-----[[ PFX Password ]]-----" -UserName $env:username).GetNetworkCredential().Password | ConvertFrom-SecureString), [EnvironmentVariableTarget]::Process)
     }
     hidden [void] Createkey([string]$keyName) {
         Write-Host "[HsmVault] Creating HSM key ..." -ForegroundColor Green
         Add-AzKeyVaultKey -HsmName $this.config.hsmName -Name $keyName -Destination HSM
-    }
-    static [System.Security.Cryptography.X509Certificates.X509Certificate2] CreateCert([AzConfig]$AzConfig) {
-        if (!$AzConfig.PfxFile.Exists) {
-            # Generate new certificate and convert it to pfx format
-            $openssl = [HsmVault]::GetOpenssl().FullName
-            &$openssl req -newkey rsa:2048 -new -nodes -x509 -days $AzConfig.CertExpirationDays -keyout $AzConfig.PrivateCertFile.FullName -out $AzConfig.PublicCertFile.FullName -subj "/C=LV/ST=Rwanda/L=1/O=$($AzConfig.CertName)/OU=IT"
-            if (!$?) { throw [System.Exception]::New('Unexpected error') }
-            &$openssl pkcs12 -in $AzConfig.PublicCertFile.FullName -inkey $AzConfig.PrivateCertFile.FullName -export -out $AzConfig.PfxFile.FullName -passout pass:$([HsmVault]::creds.GetNetworkCredential().Password)
-            if (!$?) { throw [System.Exception]::New('Unexpected error') }
-        }
-        return [HsmVault]::CreateCert($AzConfig.CertName, $AzConfig.PfxFile, [HsmVault]::creds.GetNetworkCredential().SecurePassword)
-    }
-    static [System.Security.Cryptography.X509Certificates.X509Certificate2] CreateCert([string]$CertName, [IO.FileInfo]$PfxFile, [securestring]$Password) {
-        if (!$PfxFile.Exists) { $PfxFile = New-Item -Path $PfxFile.FullName -Type File -Force }
-        # Creates and Stores X509Cert2 in certificate store
-        $X509Cert2 = [System.Security.Cryptography.X509Certificates.X509Certificate2]::new($PfxFile.FullName, $Password, [System.Security.Cryptography.X509Certificates.X509KeyStorageFlags]::Exportable);
-        $CertStore = [System.Security.Cryptography.X509Certificates.X509Store]::new([System.Security.Cryptography.X509Certificates.StoreName]::My, [System.Security.Cryptography.X509Certificates.StoreLocation]::CurrentUser);
-        $CertStore.Open([System.Security.Cryptography.X509Certificates.OpenFlags]::ReadWrite);
-        $X509Cert2.FriendlyName = $CertName;
-        $CertStore.Add($X509Cert2)
-        $CertStore.Close()
-        return $X509Cert2
     }
     [object] CreateSecret() {
         $private:secretvalue = $this::ConvertToSecureString('mySUPERsecretAPIkey!')
@@ -285,6 +281,72 @@ class HsmVault {
         $CertStore.Close()
         return $this.Cert.Thumbprint
     }
+    static [System.Security.Cryptography.X509Certificates.X509Certificate2] CreateSelfSignedCertificate() {
+        return [HsmVault]::CreateSelfSignedCertificate("Cert-Example", [ECCurveName]::nistP521);
+    }
+    static [System.Security.Cryptography.X509Certificates.X509Certificate2] CreateSelfSignedCertificate([string]$subjectName, [ECCurveName]$curveName) {
+        # I mainly use this method because PKI module is not pre-installed on all OSs (Ex: On Arch Linux).
+        $ecdsa = [System.Security.Cryptography.ECDsa]::Create();
+        $ecdsa.GenerateKey([System.Security.Cryptography.ECCurve]::CreateFromFriendlyName("$curveName"));
+        $certRequest = [System.Security.Cryptography.X509Certificates.CertificateRequest]::new("CN=$subjectName", $ecdsa, [System.Security.Cryptography.HashAlgorithmName]::SHA256);
+        $certRequest.CertificateExtensions.Add([System.Security.Cryptography.X509Certificates.X509KeyUsageExtension]::new([System.Security.Cryptography.X509Certificates.X509KeyUsageFlags]::DigitalSignature, $true));
+        $certResult = [System.Security.Cryptography.X509Certificates.X509Certificate2]$certRequest.CreateSelfSigned([System.DateTimeOffset]::Now.AddDays(-1), [System.DateTimeOffset]::Now.AddYears(10));
+        # Return it in PFX form to prevent windows throwing a security credentials not found error during sslStream.connectAsClient or HttpClient request.
+        $Certificate2 = [System.Security.Cryptography.X509Certificates.X509Certificate2]::new($certResult.Export([System.Security.Cryptography.X509Certificates.X509ContentType]::Pfx));
+        $certResult.Dispose()
+        return $Certificate2
+    }
+
+    static [System.Security.Cryptography.X509Certificates.X509Certificate2] CreateSelfSignedCertificate([AzConfig]$AzConfig, [string]$sessionId) {
+        [HsmVault]::SetSessionCreds([guid]$sessionId)
+        $Password = [System.Environment]::GetEnvironmentVariable($sessionId) | ConvertTo-SecureString
+        if (!$AzConfig.PfxFile.Exists) {
+            # Generate new certificate and convert it to pfx format
+            $openssl = [HsmVault]::GetOpenssl().FullName
+            &$openssl req -newkey rsa:2048 -new -nodes -x509 -days $AzConfig.CertExpirationDays -keyout $AzConfig.PrivateCertFile.FullName -out $AzConfig.PublicCertFile.FullName -subj "/C=LV/ST=Rwanda/L=1/O=$($AzConfig.CertName)/OU=IT"
+            if (!$?) { throw [System.Exception]::New('Unexpected error') }
+            &$openssl pkcs12 -in $AzConfig.PublicCertFile.FullName -inkey $AzConfig.PrivateCertFile.FullName -export -out $AzConfig.PfxFile.FullName -passout pass:$([pscredential]::new($env:USERNAME, $Password).GetNetworkCredential().Password)
+            if (!$?) { throw [System.Exception]::New('Unexpected error') }
+        }
+        return [HsmVault]::CreateSelfSignedCertificate($AzConfig.CertName, $AzConfig.PfxFile, $Password)
+    }
+    static [void] SaveSelfSignedCertificate([System.Security.Cryptography.X509Certificates.X509Certificate2]$X509Cert2) {
+        # Stores X509Cert2 in certificate store.
+        $CertStore = [System.Security.Cryptography.X509Certificates.X509Store]::new([System.Security.Cryptography.X509Certificates.StoreName]::My, [System.Security.Cryptography.X509Certificates.StoreLocation]::CurrentUser);
+        $CertStore.Open([System.Security.Cryptography.X509Certificates.OpenFlags]::ReadWrite);
+        $CertStore.Add($X509Cert2);
+        $CertStore.Close()
+    }
+    [guid] GetSessionId() {
+        return [HsmVault]::GetSessionId($this)
+    }
+    static [guid] GetSessionId($HsmVault) {
+        # .NOTES
+        # - Does not create real guids; just looks like it :)
+        # - Mainly used to create unique object names with a little bit of info added.
+        $hash = $HsmVault.GetHashCode().ToString()
+        return [guid]::new([System.BitConverter]::ToString([System.Text.Encoding]::UTF8.GetBytes(([string]::Concat(([char[]](97..102 + 65..70) | Get-Random -Count (16 - $hash.Length))) + $hash))).Replace("-", "").ToLower().Insert(8, "-").Insert(13, "-").Insert(18, "-").Insert(23, "-"))
+    }
+    static [bool] VerifyGetSessionId([guid]$guid, $HsmVault) {
+        return $HsmVault.GetHashCode() -match $([string]::Concat([System.Text.Encoding]::UTF8.GetString($( {
+                            param([string]$HexString)
+                            $outputLength = $HexString.Length / 2;
+                            $output = [byte[]]::new($outputLength);
+                            $numeral = [char[]]::new(2);
+                            for ($i = 0; $i -lt $outputLength; $i++) {
+                                $HexString.CopyTo($i * 2, $numeral, 0, 2);
+                                $output[$i] = [Convert]::ToByte([string]::new($numeral), 16);
+                            }
+                            return $output;
+                        }.Invoke($guid.ToString().Replace('-', ''))
+                    )
+                ).ToCharArray().Where({ $_ -as [int] -notin (97..102 + 65..70) })
+            )
+        )
+    }
+    static [bool] VerifyGetSessionId([string]$guid, $Source) {
+        return [HsmVault]::VerifyGetSessionId([guid]$guid, $Source)
+    }
     static [IO.FileInfo] GetOpenssl () {
         # Return the path to openssl executable file + Will install it if not found.
         $res = [IO.FileInfo](Get-Command -Name OpenSSL -Type Application -ErrorAction Ignore).Source
@@ -301,6 +363,15 @@ class HsmVault {
         $private:Sec = $null; Set-Variable -Name Sec -Scope Local -Visibility Private -Option Private -Value ([System.Security.SecureString]::new());
         $plainText.toCharArray().forEach({ [void]$Sec.AppendChar($_) }); $Sec.MakeReadOnly()
         return $Sec
+    }
+    static hidden [void] Resolve_modules([string[]]$Names) {
+        $varName = 'Resolve_Module_Fn_7fb2e877_6c2b_406a_af40_e1d915c62cdf'; # let's just hope no vaiable has the same name :|
+        if (!$(Get-Variable $varName -ValueOnly -Scope script -ErrorAction Ignore)) {
+            Write-Verbose "Fetching the script Resolve-Module.ps1 (One-time only)" -Verbose ; # Fetch it Once only, To Avoid spamming the github API :)
+            Set-Variable -Name $varName -Scope global -Option ReadOnly -Value ([scriptblock]::Create($((Invoke-RestMethod -Method Get https://api.github.com/gists/7629f35f93ae89a525204bfd9931b366).files.'Resolve-Module.ps1'.content)))
+        }
+        . $(Get-Variable $varName -ValueOnly -Scope script)
+        Resolve-module -Name $Names
     }
 }
 #endregion HsmVault
@@ -349,14 +420,14 @@ class HsmSecret {
 # This class represents the result of a cryptographic operation performed on a key in the Azure Key Vault Managed HSM.
 class HsmKeyOperationResult {
     [SecureString] $Key
-    [string] $Algorithm
+    [string] $aAlgorithm
     [string] $Operation
     [string] $Result
     [string] $Message
 
-    HsmKeyOperationResult([string]$key, [string]$algorithm, [string]$operation, [string]$result, [string]$message) {
+    HsmKeyOperationResult([string]$key, [string]$aAlgorithm, [string]$operation, [string]$result, [string]$message) {
         $this.Key = [HsmVault]::ConvertToSecureString($key)
-        $this.Algorithm = $algorithm
+        $this.Algorithm = $aAlgorithm
         $this.Operation = $operation
         $this.Result = $result
         $this.Message = $message
@@ -585,34 +656,5 @@ class AzConfig : CfgList {
         $this.PrivateCertFile = [IO.FileInfo][IO.Path]::Combine($CertPath, "$($this.CertName).key.pem");
         $this.PublicCertFile = [IO.FileInfo][IO.Path]::Combine($CertPath, "$($this.CertName).cert.pem")
         $this.PfxFile = [IO.FileInfo][IO.Path]::Combine($CertPath, "$($this.CertName).pfx")
-    }
-}
-
-# .SYNOPSIS
-# GuidHelper
-# .NOTES
-# /!\ Does not create real guids; just looks like it :)
-# Used mainly to create unique object names with a little bit of info added.
-class GuidHelper {
-    static [guid] GetGuid($Source) {
-        $hash = $Source.GetHashCode().ToString()
-        return [guid]::new([System.BitConverter]::ToString([System.Text.Encoding]::UTF8.GetBytes(([string]::Concat(([char[]](97..102 + 65..70) | Get-Random -Count (16 - $hash.Length))) + $hash))).Replace("-", "").ToLower().Insert(8, "-").Insert(13, "-").Insert(18, "-").Insert(23, "-"))
-    }
-    static [bool] VerifyGuid([guid]$guid, $Source) {
-        return $Source.GetHashCode() -match $([string]::Concat([System.Text.Encoding]::UTF8.GetString($( {
-                            param([string]$HexString)
-                            $outputLength = $HexString.Length / 2;
-                            $output = [byte[]]::new($outputLength);
-                            $numeral = [char[]]::new(2);
-                            for ($i = 0; $i -lt $outputLength; $i++) {
-                                $HexString.CopyTo($i * 2, $numeral, 0, 2);
-                                $output[$i] = [Convert]::ToByte([string]::new($numeral), 16);
-                            }
-                            return $output;
-                        }.Invoke($guid.ToString().Replace('-', ''))
-                    )
-                ).ToCharArray().Where({ $_ -as [int] -notin (97..102 + 65..70) })
-            )
-        )
     }
 }
