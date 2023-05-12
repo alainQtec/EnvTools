@@ -63,18 +63,6 @@ enum AzureLocation {
     WestUS3
     # See Azure [documentation](https://learn.microsoft.com/en-us/dotnet/api/azure.core.azurelocation) for the exhaustive list
 }
-enum ECCurveName {
-    ansix9p256r1
-    ansix9p384r1
-    ansix9p521r1
-    brainpoolP256r1
-    brainpoolP384r1
-    brainpoolP512r1
-    nistP256
-    nistP384
-    nistP521
-    secp256k1
-}
 
 #region    HsmVault
 # .SYNOPSIS
@@ -104,18 +92,22 @@ class HsmVault {
     [AzConfig] $config
     [System.Security.Cryptography.X509Certificates.X509Certificate2]$Cert
     static hidden [bool]$IsSetup = [bool][int]$env:Is_HsmVault_Setup
+    static hidden $X509CertHelper
+    static hidden [string]$script_var_suffix = '7fb2e877_6c2b_406a_af40_e1d915c62cdf'
 
     HsmVault() {
         $this.config = [AzConfig]::New();
-        $this.Cert = [HsmVault]::CreateSelfSignedCertificate("C=LV/ST=Earth/L=1/O=$($this.config.CertName)/OU=IT", [ECCurveName]::nistP521);
+        $this.Load_X509CertHelper()
+        $this.Cert = [HsmVault]::X509CertHelper::CreateSelfSignedCertificate("C=LV/ST=Earth/L=1/O=$($this.config.CertName)/OU=IT");
         $this.Authenticate();
     }
     HsmVault([string]$AzureVaultName, [AzureResourceGroup]$AzureResourceGroup, [string]$AzureSubscriptionID) {
         $this.config = [AzConfig]::New();
+        $this.Load_X509CertHelper();
         $this.Config.AzureVaultName = $AzureVaultName
         $this.Config.AzureResourceGroup = $AzureResourceGroup
         $this.Config.AzureSubscriptionID = $AzureSubscriptionID
-        $this.Cert = [HsmVault]::CreateSelfSignedCertificate("C=LV/ST=Earth/L=1/O=$($this.config.CertName)/OU=IT", [ECCurveName]::nistP521);
+        $this.Cert = [HsmVault]::X509CertHelper::CreateSelfSignedCertificate("C=LV/ST=Earth/L=1/O=$($this.config.CertName)/OU=IT");
         $this.Authenticate();
     }
     [void] Setup() {
@@ -132,7 +124,7 @@ class HsmVault {
 
         $null = [HsmVault]::RunAsync({ New-AzKeyVaultManagedHsm -AzureResourceGroup $this.config.AzureResourceGroup.Name -Name $this.config.hsmName -Location $this.config.location -Sku Standard_B1 -Administrators $principalId }, 'Creating a managed HSM ...')
         Write-Host "[HsmVault] Generate a certificate locally which will be used to Authenticate" -ForegroundColor Green
-        $_crt = [HsmVault]::CreateSelfSignedCertificate($this.config, $this.GetSessionId().ToString()); $keyValue = [System.Convert]::ToBase64String($_crt.GetRawCertData())
+        $_crt = [HsmVault]::X509CertHelper::CreateSelfSignedCertificate($this.config, $this.GetSessionId().ToString()); $keyValue = [System.Convert]::ToBase64String($_crt.GetRawCertData())
 
         $sp = [HsmVault]::RunAsync({
                 New-AzADServicePrincipal -DisplayName $this.config.AzureServicePrincipalAppName -CertValue $keyValue -EndDate $_crt.NotAfter -StartDate $_crt.NotBefore
@@ -272,31 +264,10 @@ class HsmVault {
         $Secret = (Get-AzKeyVaultSecret -VaultName $this.config.AzureVaultName -Name "ExamplePassword").SecretValueText
         return $Secret
     }
-    [string] GetThumbPrint() { return $this.GetThumbPrint($this.Cert.Subject) }
-    [string] GetThumbPrint([string]$certSubject) {
-        $CertStore = [System.Security.Cryptography.X509Certificates.X509Store]::new([System.Security.Cryptography.X509Certificates.StoreName]::My, [System.Security.Cryptography.X509Certificates.StoreLocation]::CurrentUser)
-        $CertStore.Open([System.Security.Cryptography.X509Certificates.OpenFlags]::ReadOnly); $Thumbprints = $CertStore.Certificates.Where({ $_.Subject -eq $this.Cert.Subject -and $_.FriendlyName -eq ($this.config.AzureTenantID + '-cert') }).Thumbprint
-        if ($Thumbprints.count -gt 1) { Write-Warning 'Ambiguous certs' }
-        $this.Cert.Thumbprint = $Thumbprints[0];
-        $CertStore.Close()
+    [string] GetThumbPrint() {
+        $this.Cert.Thumbprint = $this::X509CertHelper::GetThumbPrint($this.Cert.Subject, $this.config.AzureTenantID + '-cert')
         return $this.Cert.Thumbprint
     }
-    static [System.Security.Cryptography.X509Certificates.X509Certificate2] CreateSelfSignedCertificate() {
-        return [HsmVault]::CreateSelfSignedCertificate("Cert-Example", [ECCurveName]::nistP521);
-    }
-    static [System.Security.Cryptography.X509Certificates.X509Certificate2] CreateSelfSignedCertificate([string]$subjectName, [ECCurveName]$curveName) {
-        # I mainly use this method because PKI module is not pre-installed on all OSs (Ex: On Arch Linux).
-        $ecdsa = [System.Security.Cryptography.ECDsa]::Create();
-        $ecdsa.GenerateKey([System.Security.Cryptography.ECCurve]::CreateFromFriendlyName("$curveName"));
-        $certRequest = [System.Security.Cryptography.X509Certificates.CertificateRequest]::new("CN=$subjectName", $ecdsa, [System.Security.Cryptography.HashAlgorithmName]::SHA256);
-        $certRequest.CertificateExtensions.Add([System.Security.Cryptography.X509Certificates.X509KeyUsageExtension]::new([System.Security.Cryptography.X509Certificates.X509KeyUsageFlags]::DigitalSignature, $true));
-        $certResult = [System.Security.Cryptography.X509Certificates.X509Certificate2]$certRequest.CreateSelfSigned([System.DateTimeOffset]::Now.AddDays(-1), [System.DateTimeOffset]::Now.AddYears(10));
-        # Return it in PFX form to prevent windows throwing a security credentials not found error during sslStream.connectAsClient or HttpClient request.
-        $Certificate2 = [System.Security.Cryptography.X509Certificates.X509Certificate2]::new($certResult.Export([System.Security.Cryptography.X509Certificates.X509ContentType]::Pfx));
-        $certResult.Dispose()
-        return $Certificate2
-    }
-
     static [System.Security.Cryptography.X509Certificates.X509Certificate2] CreateSelfSignedCertificate([AzConfig]$AzConfig, [string]$sessionId) {
         [HsmVault]::SetSessionCreds([guid]$sessionId)
         $Password = [System.Environment]::GetEnvironmentVariable($sessionId) | ConvertTo-SecureString
@@ -309,13 +280,6 @@ class HsmVault {
             if (!$?) { throw [System.Exception]::New('Unexpected error') }
         }
         return [HsmVault]::CreateSelfSignedCertificate($AzConfig.CertName, $AzConfig.PfxFile, $Password)
-    }
-    static [void] SaveSelfSignedCertificate([System.Security.Cryptography.X509Certificates.X509Certificate2]$X509Cert2) {
-        # Stores X509Cert2 in certificate store.
-        $CertStore = [System.Security.Cryptography.X509Certificates.X509Store]::new([System.Security.Cryptography.X509Certificates.StoreName]::My, [System.Security.Cryptography.X509Certificates.StoreLocation]::CurrentUser);
-        $CertStore.Open([System.Security.Cryptography.X509Certificates.OpenFlags]::ReadWrite);
-        $CertStore.Add($X509Cert2);
-        $CertStore.Close()
     }
     [guid] GetSessionId() {
         return [HsmVault]::GetSessionId($this)
@@ -364,11 +328,20 @@ class HsmVault {
         $plainText.toCharArray().forEach({ [void]$Sec.AppendChar($_) }); $Sec.MakeReadOnly()
         return $Sec
     }
+    hidden [void] Load_X509CertHelper() {
+        $varName = "X509CertHelper_class_$([HsmVault]::script_var_suffix)";
+        if (!$(Get-Variable $varName -ValueOnly -Scope script -ErrorAction Ignore)) {
+            Write-Verbose "Fetching the script X509CertHelper.ps1 (One-time only)" -Verbose ;
+            Set-Variable -Name $varName -Scope script -Option ReadOnly -Value ([scriptblock]::Create($((Invoke-RestMethod -Method Get https://api.github.com/gists/d8f277f1d830882c4927c144a99b70cd).files.'X509CertHelper.ps1'.content)));
+        }
+        . $(Get-Variable $varName -ValueOnly -Scope script);
+        [HsmVault]::X509CertHelper = New-Object X509CertHelper
+    }
     static hidden [void] Resolve_modules([string[]]$Names) {
-        $varName = 'Resolve_Module_Fn_7fb2e877_6c2b_406a_af40_e1d915c62cdf'; # let's just hope no vaiable has the same name :|
+        $varName = "Resolve_Module_Fn_$([HsmVault]::script_var_suffix)"; # let's just hope no vaiable has the same name :|
         if (!$(Get-Variable $varName -ValueOnly -Scope script -ErrorAction Ignore)) {
             Write-Verbose "Fetching the script Resolve-Module.ps1 (One-time only)" -Verbose ; # Fetch it Once only, To Avoid spamming the github API :)
-            Set-Variable -Name $varName -Scope global -Option ReadOnly -Value ([scriptblock]::Create($((Invoke-RestMethod -Method Get https://api.github.com/gists/7629f35f93ae89a525204bfd9931b366).files.'Resolve-Module.ps1'.content)))
+            Set-Variable -Name $varName -Scope script -Option ReadOnly -Value ([scriptblock]::Create($((Invoke-RestMethod -Method Get https://api.github.com/gists/7629f35f93ae89a525204bfd9931b366).files.'Resolve-Module.ps1'.content)))
         }
         . $(Get-Variable $varName -ValueOnly -Scope script)
         Resolve-module -Name $Names
