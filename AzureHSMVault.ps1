@@ -99,6 +99,10 @@ class HsmVault {
         $this.config = [AzConfig]::New();
         $this.Load_X509CertHelper()
         $this.Cert = [HsmVault]::X509CertHelper::CreateSelfSignedCertificate("C=LV/ST=Earth/L=1/O=$($this.config.CertName)/OU=IT");
+        # if (![HsmVault]::IsSetup) {
+        #     Write-Host '[HsmVault] Setting up an Azure Key Vault (One time only) ...' -ForegroundColor Green
+        #     $this.Setup()
+        # }
         $this.Authenticate();
     }
     HsmVault([string]$AzureVaultName, [AzureResourceGroup]$AzureResourceGroup, [string]$AzureSubscriptionID) {
@@ -108,6 +112,10 @@ class HsmVault {
         $this.Config.AzureResourceGroup = $AzureResourceGroup
         $this.Config.AzureSubscriptionID = $AzureSubscriptionID
         $this.Cert = [HsmVault]::X509CertHelper::CreateSelfSignedCertificate("C=LV/ST=Earth/L=1/O=$($this.config.CertName)/OU=IT");
+        # if (![HsmVault]::IsSetup) {
+        #     Write-Host '[HsmVault] Setting up an Azure Key Vault (One time only) ...' -ForegroundColor Green
+        #     $this.Setup()
+        # };
         $this.Authenticate();
     }
     [void] Setup() {
@@ -222,10 +230,6 @@ class HsmVault {
         return $Comdresult
     }
     hidden [void] Authenticate() {
-        if (![HsmVault]::IsSetup) {
-            Write-Host '[HsmVault] Setting up an Azure Key Vault (One time only) ...' -ForegroundColor Green
-            $this.Setup()
-        };
         [HsmVault]::SetSessionCreds($this.GetSessionId())
         $null = [HsmVault]::RunAsync({ Login-AzAccount }, 'AzAccount login')
         Write-Host "[HsmVault] Azure account Authentication complete." -ForegroundColor Green
@@ -239,7 +243,7 @@ class HsmVault {
                 return
             }
         }
-        [System.Environment]::SetEnvironmentVariable("$sessionId", $((Get-Credential -Message "Enter your Pfx Password" -Title "-----[[ PFX Password ]]-----" -UserName $env:username).GetNetworkCredential().Password | ConvertFrom-SecureString), [EnvironmentVariableTarget]::Process)
+        [System.Environment]::SetEnvironmentVariable("$sessionId", $((Get-Credential -Message "Enter your Pfx Password" -Title "-----[[ PFX Password ]]-----" -UserName $env:username).GetNetworkCredential().SecurePassword | ConvertFrom-SecureString), [EnvironmentVariableTarget]::Process)
     }
     hidden [void] Createkey([string]$keyName) {
         Write-Host "[HsmVault] Creating HSM key ..." -ForegroundColor Green
@@ -331,7 +335,7 @@ class HsmVault {
     hidden [void] Load_X509CertHelper() {
         $varName = "X509CertHelper_class_$([HsmVault]::script_var_suffix)";
         if (!$(Get-Variable $varName -ValueOnly -Scope script -ErrorAction Ignore)) {
-            Write-Verbose "Fetching the script X509CertHelper.ps1 (One-time only)" -Verbose ;
+            Write-Verbose "Fetching X509CertHelper class (One-time only)" -Verbose ;
             Set-Variable -Name $varName -Scope script -Option ReadOnly -Value ([scriptblock]::Create($((Invoke-RestMethod -Method Get https://api.github.com/gists/d8f277f1d830882c4927c144a99b70cd).files.'X509CertHelper.ps1'.content)));
         }
         . $(Get-Variable $varName -ValueOnly -Scope script);
@@ -340,7 +344,7 @@ class HsmVault {
     static hidden [void] Resolve_modules([string[]]$Names) {
         $varName = "Resolve_Module_Fn_$([HsmVault]::script_var_suffix)"; # let's just hope no vaiable has the same name :|
         if (!$(Get-Variable $varName -ValueOnly -Scope script -ErrorAction Ignore)) {
-            Write-Verbose "Fetching the script Resolve-Module.ps1 (One-time only)" -Verbose ; # Fetch it Once only, To Avoid spamming the github API :)
+            Write-Verbose "Fetching Resolve-Module.ps1 script (One-time only)" -Verbose ; # Fetch it Once only, To Avoid spamming the github API :)
             Set-Variable -Name $varName -Scope script -Option ReadOnly -Value ([scriptblock]::Create($((Invoke-RestMethod -Method Get https://api.github.com/gists/7629f35f93ae89a525204bfd9931b366).files.'Resolve-Module.ps1'.content)))
         }
         . $(Get-Variable $varName -ValueOnly -Scope script)
