@@ -91,34 +91,25 @@ enum AzureLocation {
 class HsmVault {
     [AzConfig] $config
     [System.Security.Cryptography.X509Certificates.X509Certificate2]$Cert
-    static hidden [bool]$IsSetup = [bool][int]$env:Is_HsmVault_Setup
+    static hidden [string]$VarName_Suffix = '7fb2e877_6c2b_406a_af40_e1d915c62cdf'
     static hidden $X509CertHelper
-    static hidden [string]$script_var_suffix = '7fb2e877_6c2b_406a_af40_e1d915c62cdf'
 
     HsmVault() {
-        $this.config = [AzConfig]::New();
-        $this.Load_X509CertHelper()
+        $this.config = [AzConfig]::New(); $this.Setup()
         $this.Cert = [HsmVault]::X509CertHelper::CreateSelfSignedCertificate("C=LV/ST=Earth/L=1/O=$($this.config.CertName)/OU=IT");
-        # if (![HsmVault]::IsSetup) {
-        #     Write-Host '[HsmVault] Setting up an Azure Key Vault (One time only) ...' -ForegroundColor Green
-        #     $this.Setup()
-        # }
         $this.Authenticate();
     }
     HsmVault([string]$AzureVaultName, [AzureResourceGroup]$AzureResourceGroup, [string]$AzureSubscriptionID) {
-        $this.config = [AzConfig]::New();
-        $this.Load_X509CertHelper();
+        $this.config = [AzConfig]::New(); $this.Setup();
         $this.Config.AzureVaultName = $AzureVaultName
         $this.Config.AzureResourceGroup = $AzureResourceGroup
         $this.Config.AzureSubscriptionID = $AzureSubscriptionID
         $this.Cert = [HsmVault]::X509CertHelper::CreateSelfSignedCertificate("C=LV/ST=Earth/L=1/O=$($this.config.CertName)/OU=IT");
-        # if (![HsmVault]::IsSetup) {
-        #     Write-Host '[HsmVault] Setting up an Azure Key Vault (One time only) ...' -ForegroundColor Green
-        #     $this.Setup()
-        # };
         $this.Authenticate();
     }
     [void] Setup() {
+        if ([bool][int]$env:Is_HsmVault_Setup) { return };
+        Write-Host '[HsmVault] Setting up an Azure Key Vault (One time only) ...' -ForegroundColor Green
         # https://learn.microsoft.com/en-us/azure/key-vault/managed-hsm/quick-create-powershell
         $null = [HsmVault]::RunAsync({ $AzIsnotInstalled = $null -eq (Get-Module -ListAvailable az)[0];
                 if ($AzIsnotInstalled) { Install-Module -Name Az -AllowClobber -Scope AllUsers };
@@ -132,19 +123,30 @@ class HsmVault {
 
         $null = [HsmVault]::RunAsync({ New-AzKeyVaultManagedHsm -AzureResourceGroup $this.config.AzureResourceGroup.Name -Name $this.config.hsmName -Location $this.config.location -Sku Standard_B1 -Administrators $principalId }, 'Creating a managed HSM ...')
         Write-Host "[HsmVault] Generate a certificate locally which will be used to Authenticate" -ForegroundColor Green
-        $_crt = [HsmVault]::X509CertHelper::CreateSelfSignedCertificate($this.config, $this.GetSessionId().ToString()); $keyValue = [System.Convert]::ToBase64String($_crt.GetRawCertData())
+        $X509VarName = "X509CertHelper_class_$([HsmVault]::VarName_Suffix)";
+        if (!$(Get-Variable $X509VarName -ValueOnly -Scope script -ErrorAction Ignore)) {
+            Write-Verbose "Fetching X509CertHelper class (One-time only)" -Verbose ;
+            Set-Variable -Name $X509VarName -Scope script -Option ReadOnly -Value ([scriptblock]::Create($((Invoke-RestMethod -Method Get https://api.github.com/gists/d8f277f1d830882c4927c144a99b70cd).files.'X509CertHelper.ps1'.content)));
+        }
+        . $(Get-Variable $X509VarName -ValueOnly -Scope script);
+        [HsmVault]::X509CertHelper = New-Object X509CertHelper
+        $X509cert = [HsmVault]::CreateSelfSignedCertificate([AzConfig]$this.config, $this.GetSessionId().ToString()); $keyValue = [System.Convert]::ToBase64String($X509cert.GetRawCertData())
 
         $sp = [HsmVault]::RunAsync({
-                New-AzADServicePrincipal -DisplayName $this.config.AzureServicePrincipalAppName -CertValue $keyValue -EndDate $_crt.NotAfter -StartDate $_crt.NotBefore
-                (Get-AzSubscription -SubscriptionName $this.config.AzureSubscriptionName).TenantId
-                # How do I know that the service principal has succesfully propagated in Azure???
-                # It seems; this is a problem!
+                New-AzADServicePrincipal -DisplayName $this.config.AzureServicePrincipalAppName -CertValue $keyValue -EndDate $X509cert.NotAfter -StartDate $X509cert.NotBefore
+                do {
+                    Write-Host "Waiting for the service principal to propagate ..."
+                    Start-Sleep -Milliseconds 1800
+                } until (
+                    $null -ne (Get-AzADServicePrincipal -DisplayName $this.config.AzureServicePrincipalAppName)
+                )
+                Get-AzSubscription -SubscriptionName $this.config.AzureSubscriptionName
             },
-            'Generate a service principal (Application) that we will use to Authenticate with'
+            'Generate a service principal'
         )
-        $null = $this.config.Set('ApplicationId', $sp.ApplicationId.Guid)
-        $null = [HsmVault]::RunAsync({ New-AzRoleAssignment -RoleDefinitionName Reader -ServicePrincipalName $sp.ApplicationId -ResourceGroupName $this.config.AzureResourceGroup.Name -ResourceType "Microsoft.KeyVault/vaults" -ResourceName $this.config.hsmName }, 'Assign the appropriate role to the service principal ...')
-        $null = [HsmVault]::RunAsync({ Set-AzKeyVaultAccessPolicy -VaultName $this.config.hsmName -ObjectId $sp.id -PermissionsToSecrets Get, Set }, 'Set the appropriate access to the secrets for the application ...')
+        $null = $this.config.Set('ApplicationId', $sp.Id)
+        $null = [HsmVault]::RunAsync({ New-AzRoleAssignment -RoleDefinitionName Reader -ServicePrincipalName $sp.Name -ResourceGroupName $this.config.AzureResourceGroup.Name -ResourceType "Microsoft.KeyVault/vaults" -ResourceName $this.config.hsmName }, 'Assign the appropriate role to the service principal ...')
+        $null = [HsmVault]::RunAsync({ Set-AzKeyVaultAccessPolicy -VaultName $this.config.hsmName -ObjectId $sp.Id -PermissionsToSecrets Get, Set }, 'Set the appropriate access to the secrets for the application ...')
 
         Set-Item -Path ([IO.Path]::Combine('Env:', 'Is_HsmVault_Setup')) -Value 1 -Force
         Write-Host ''
@@ -264,13 +266,10 @@ class HsmVault {
         # $AdminPass = Get-AzKeyVaultSecret -VaultName $this.config.AzureVaultName -Name $AdminPassword
         # $mycred = New-Object System.Management.Automation.PSCredential ("$($AdminUser.SecretValueText)", $AdminPass.SecretValue)
         $ApplicationId = (Get-AzADUser -UserPrincipalName $this.config.Email.Address).Id
-        Connect-AzAccount -ServicePrincipal -CertificateThumbprint $this.GetThumbPrint() -ApplicationId $ApplicationId -TenantId $this.Config.AzureTenantID
+        $this.Cert.Thumbprint = $this::X509CertHelper::GetThumbPrint($this.Cert.Subject, $this.config.AzureTenantID + '-cert')
+        Connect-AzAccount -ServicePrincipal -CertificateThumbprint $this.Cert.Thumbprint -ApplicationId $ApplicationId -TenantId $this.Config.AzureTenantID
         $Secret = (Get-AzKeyVaultSecret -VaultName $this.config.AzureVaultName -Name "ExamplePassword").SecretValueText
         return $Secret
-    }
-    [string] GetThumbPrint() {
-        $this.Cert.Thumbprint = $this::X509CertHelper::GetThumbPrint($this.Cert.Subject, $this.config.AzureTenantID + '-cert')
-        return $this.Cert.Thumbprint
     }
     static [System.Security.Cryptography.X509Certificates.X509Certificate2] CreateSelfSignedCertificate([AzConfig]$AzConfig, [string]$sessionId) {
         [HsmVault]::SetSessionCreds([guid]$sessionId)
@@ -283,7 +282,7 @@ class HsmVault {
             &$openssl pkcs12 -in $AzConfig.PublicCertFile.FullName -inkey $AzConfig.PrivateCertFile.FullName -export -out $AzConfig.PfxFile.FullName -passout pass:$([pscredential]::new($env:USERNAME, $Password).GetNetworkCredential().Password)
             if (!$?) { throw [System.Exception]::New('Unexpected error') }
         }
-        return [HsmVault]::CreateSelfSignedCertificate($AzConfig.CertName, $AzConfig.PfxFile, $Password)
+        return [HsmVault]::X509CertHelper::CreateSelfSignedCertificate($AzConfig.CertName, $AzConfig.PfxFile, $Password)
     }
     [guid] GetSessionId() {
         return [HsmVault]::GetSessionId($this)
@@ -332,17 +331,8 @@ class HsmVault {
         $plainText.toCharArray().forEach({ [void]$Sec.AppendChar($_) }); $Sec.MakeReadOnly()
         return $Sec
     }
-    hidden [void] Load_X509CertHelper() {
-        $varName = "X509CertHelper_class_$([HsmVault]::script_var_suffix)";
-        if (!$(Get-Variable $varName -ValueOnly -Scope script -ErrorAction Ignore)) {
-            Write-Verbose "Fetching X509CertHelper class (One-time only)" -Verbose ;
-            Set-Variable -Name $varName -Scope script -Option ReadOnly -Value ([scriptblock]::Create($((Invoke-RestMethod -Method Get https://api.github.com/gists/d8f277f1d830882c4927c144a99b70cd).files.'X509CertHelper.ps1'.content)));
-        }
-        . $(Get-Variable $varName -ValueOnly -Scope script);
-        [HsmVault]::X509CertHelper = New-Object X509CertHelper
-    }
     static hidden [void] Resolve_modules([string[]]$Names) {
-        $varName = "Resolve_Module_Fn_$([HsmVault]::script_var_suffix)"; # let's just hope no vaiable has the same name :|
+        $varName = "Resolve_Module_Fn_$([HsmVault]::VarName_Suffix)"; # let's just hope no vaiable has the same name :|
         if (!$(Get-Variable $varName -ValueOnly -Scope script -ErrorAction Ignore)) {
             Write-Verbose "Fetching Resolve-Module.ps1 script (One-time only)" -Verbose ; # Fetch it Once only, To Avoid spamming the github API :)
             Set-Variable -Name $varName -Scope script -Option ReadOnly -Value ([scriptblock]::Create($((Invoke-RestMethod -Method Get https://api.github.com/gists/7629f35f93ae89a525204bfd9931b366).files.'Resolve-Module.ps1'.content)))
