@@ -96,7 +96,7 @@ class HsmVault {
 
     HsmVault() {
         $this.config = [AzConfig]::New(); $this.Setup()
-        $this.Cert = [HsmVault]::X509CertHelper::CreateSelfSignedCertificate("C=LV/ST=Earth/L=1/O=$($this.config.CertName)/OU=IT");
+        $this.Cert = [HsmVault]::X509CertHelper::CreateSelfSignedCertificate("CN=$($this.config.CertName)");
         $this.Authenticate();
     }
     HsmVault([string]$AzureVaultName, [AzureResourceGroup]$AzureResourceGroup, [string]$AzureSubscriptionID) {
@@ -104,8 +104,13 @@ class HsmVault {
         $this.Config.AzureVaultName = $AzureVaultName
         $this.Config.AzureResourceGroup = $AzureResourceGroup
         $this.Config.AzureSubscriptionID = $AzureSubscriptionID
-        $this.Cert = [HsmVault]::X509CertHelper::CreateSelfSignedCertificate("C=LV/ST=Earth/L=1/O=$($this.config.CertName)/OU=IT");
+        $this.Cert = [HsmVault]::X509CertHelper::CreateSelfSignedCertificate("CN=$($this.config.CertName)");
         $this.Authenticate();
+    }
+    [void] Authenticate() {
+        [HsmVault]::SetSessionCreds($this.GetSessionId())
+        $null = [HsmVault]::RunAsync({ Login-AzAccount }, 'AzAccount login')
+        Write-Host "[HsmVault] Azure account Authentication complete." -ForegroundColor Green
     }
     [void] Setup() {
         if ([bool][int]$env:Is_HsmVault_Setup) { return };
@@ -113,7 +118,7 @@ class HsmVault {
         # https://learn.microsoft.com/en-us/azure/key-vault/managed-hsm/quick-create-powershell
         $null = [HsmVault]::RunAsync({ $AzIsnotInstalled = $null -eq (Get-Module -ListAvailable az)[0];
                 if ($AzIsnotInstalled) { Install-Module -Name Az -AllowClobber -Scope AllUsers };
-                Enable-AzureRmAlias
+                Enable-AzureRmAlias -Scope CurrentUser
             }, 'Enable Aliases from the previous Azure RM'
         )
         $null = [HsmVault]::RunAsync({ Connect-AzAccount }, 'Connect-AzAccount, Waiting the Browser ...')
@@ -135,11 +140,9 @@ class HsmVault {
         $sp = [HsmVault]::RunAsync({
                 New-AzADServicePrincipal -DisplayName $this.config.AzureServicePrincipalAppName -CertValue $keyValue -EndDate $X509cert.NotAfter -StartDate $X509cert.NotBefore
                 do {
-                    Write-Host "Waiting for the service principal to propagate ..."
+                    Write-Host "`nWaiting for the service principal to propagate ..."
                     Start-Sleep -Milliseconds 1800
-                } until (
-                    $null -ne (Get-AzADServicePrincipal -DisplayName $this.config.AzureServicePrincipalAppName)
-                )
+                } until ($null -ne (Get-AzADServicePrincipal -DisplayName $this.config.AzureServicePrincipalAppName))
                 Get-AzSubscription -SubscriptionName $this.config.AzureSubscriptionName
             },
             'Generate a service principal'
@@ -221,30 +224,22 @@ class HsmVault {
         #  Run Commands using Background Runspaces Instead of PSJobs For Better Performance
         $Comdresult = $null; [ValidateNotNullOrEmpty()][scriptBlock]$command = $command
         $PsInstance = [System.Management.Automation.PowerShell]::Create().AddScript($command)
-        $job = $PsInstance.BeginInvoke(); while (!$job.IsCompleted) {
+        $job = $PsInstance.BeginInvoke();
+        do {
             $ProgressPercent = if ([int]$job.TotalTime.TotalMilliseconds -ne 0) { [int]($job.RemainingTime.TotalMilliseconds / $job.TotalTime.TotalMilliseconds * 100) } else { 100 }
             Write-Progress -Activity "[HsmVault]" -Status "$StatusMsg" -PercentComplete $ProgressPercent
             Start-Sleep -Milliseconds 100
-        }
+        } until ($job.IsCompleted)
         Write-Progress -Activity "[HsmVault]" -Status "command Complete." -PercentComplete 100
         $Comdresult = $PsInstance.EndInvoke($job)
-        $PsInstance.Dispose();
+        $PsInstance.Dispose(); $PsInstance.Runspace.CloseAsync()
         return $Comdresult
-    }
-    hidden [void] Authenticate() {
-        [HsmVault]::SetSessionCreds($this.GetSessionId())
-        $null = [HsmVault]::RunAsync({ Login-AzAccount }, 'AzAccount login')
-        Write-Host "[HsmVault] Azure account Authentication complete." -ForegroundColor Green
     }
     static [void] SetSessionCreds([guid]$sessionId) {
         [HsmVault]::SetSessionCreds([guid]$sessionId, $false)
     }
     static [void] SetSessionCreds([guid]$sessionId, [bool]$Force) {
-        if (![string]::IsNullOrWhiteSpace([System.Environment]::GetEnvironmentVariable("$sessionId"))) {
-            if (!$Force) {
-                return
-            }
-        }
+        if (![string]::IsNullOrWhiteSpace([System.Environment]::GetEnvironmentVariable("$sessionId"))) { if (!$Force) { return } }
         [System.Environment]::SetEnvironmentVariable("$sessionId", $((Get-Credential -Message "Enter your Pfx Password" -Title "-----[[ PFX Password ]]-----" -UserName $env:username).GetNetworkCredential().SecurePassword | ConvertFrom-SecureString), [EnvironmentVariableTarget]::Process)
     }
     hidden [void] Createkey([string]$keyName) {
@@ -276,7 +271,7 @@ class HsmVault {
         $Password = [System.Environment]::GetEnvironmentVariable($sessionId) | ConvertTo-SecureString
         if (!$AzConfig.PfxFile.Exists) {
             # Generate new certificate and convert it to pfx format
-            $openssl = [HsmVault]::GetOpenssl().FullName
+            $openssl = [HsmVault]::X509CertHelper::GetOpenssl().FullName
             &$openssl req -newkey rsa:2048 -new -nodes -x509 -days $AzConfig.CertExpirationDays -keyout $AzConfig.PrivateCertFile.FullName -out $AzConfig.PublicCertFile.FullName -subj "/C=LV/ST=Rwanda/L=1/O=$($AzConfig.CertName)/OU=IT"
             if (!$?) { throw [System.Exception]::New('Unexpected error') }
             &$openssl pkcs12 -in $AzConfig.PublicCertFile.FullName -inkey $AzConfig.PrivateCertFile.FullName -export -out $AzConfig.PfxFile.FullName -passout pass:$([pscredential]::new($env:USERNAME, $Password).GetNetworkCredential().Password)
@@ -313,15 +308,6 @@ class HsmVault {
     }
     static [bool] VerifyGetSessionId([string]$guid, $Source) {
         return [HsmVault]::VerifyGetSessionId([guid]$guid, $Source)
-    }
-    static [IO.FileInfo] GetOpenssl () {
-        # Return the path to openssl executable file + Will install it if not found.
-        $res = [IO.FileInfo](Get-Command -Name OpenSSL -Type Application -ErrorAction Ignore).Source
-        if (!$res -or !$res.Exists) {
-            if (!(Get-Command -Name Install-OpenSSL -Type ExternalScript -ErrorAction Ignore)) { Install-Script -Name Install-OpenSSL -Repository PSGallery -Scope CurrentUser }
-            Install-OpenSSL
-        }
-        return $res
     }
     [Byte[]] RetrieveKey([string]$keyName) {
         return (Get-AzKeyVaultKey -HsmName $this.config.hsmName -Name $keyName)
