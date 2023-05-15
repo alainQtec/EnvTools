@@ -124,17 +124,16 @@ class HsmVault {
         $null = [HsmVault]::RunAsync({ Connect-AzAccount }, 'Connect-AzAccount, Waiting the Browser ...')
         $null = [HsmVault]::RunAsync({ Set-AzContext -SubscriptionName $this.config.AzureSubscriptionName; New-AzResourceGroup -Name $this.config.AzureResourceGroup.Name -Location $this.config.AzureResourceGroup.Location.ToString() }, 'Set resource Group')
         $principalId = [HsmVault]::RunAsync({ (Get-AzADUser -UserPrincipalName $this.config.Email.Address).Id }, 'Getting your principal ID ...')
-        Write-Host "[HsmVault] Creating a managed HSM .." -ForegroundColor Green
-
-        $null = [HsmVault]::RunAsync({ New-AzKeyVaultManagedHsm -AzureResourceGroup $this.config.AzureResourceGroup.Name -Name $this.config.hsmName -Location $this.config.location -Sku Standard_B1 -Administrators $principalId }, 'Creating a managed HSM ...')
+        Write-Host "[HsmVault] Creating a managed HSM ..." -ForegroundColor Green
+        $null = [HsmVault]::RunAsync({ New-AzKeyVaultManagedHsm -Name $this.config.hsmName -ResourceGroupName $this.config.AzureResourceGroup.Name -Location $this.config.location -Sku Standard_B1 -Administrators $principalId }, 'Create a managed HSM ...')
         Write-Host "[HsmVault] Generate a certificate locally which will be used to Authenticate" -ForegroundColor Green
         $X509VarName = "X509CertHelper_class_$([HsmVault]::VarName_Suffix)";
         if (!$(Get-Variable $X509VarName -ValueOnly -Scope script -ErrorAction Ignore)) {
             Write-Verbose "Fetching X509CertHelper class (One-time only)" -Verbose ;
             Set-Variable -Name $X509VarName -Scope script -Option ReadOnly -Value ([scriptblock]::Create($((Invoke-RestMethod -Method Get https://api.github.com/gists/d8f277f1d830882c4927c144a99b70cd).files.'X509CertHelper.ps1'.content)));
         }
-        . $(Get-Variable $X509VarName -ValueOnly -Scope script);
-        [HsmVault]::X509CertHelper = New-Object X509CertHelper
+        $X509CertHelper_class = Get-Variable $X509VarName -ValueOnly -Scope script
+        if ($X509CertHelper_class) { . $X509CertHelper_class; [HsmVault]::X509CertHelper = New-Object X509CertHelper }
         $X509cert = [HsmVault]::CreateSelfSignedCertificate([AzConfig]$this.config, $this.GetSessionId().ToString()); $keyValue = [System.Convert]::ToBase64String($X509cert.GetRawCertData())
 
         $sp = [HsmVault]::RunAsync({
@@ -269,23 +268,14 @@ class HsmVault {
     static [System.Security.Cryptography.X509Certificates.X509Certificate2] CreateSelfSignedCertificate([AzConfig]$AzConfig, [string]$sessionId) {
         [HsmVault]::SetSessionCreds([guid]$sessionId)
         $Password = [System.Environment]::GetEnvironmentVariable($sessionId) | ConvertTo-SecureString
-        if (!$AzConfig.PfxFile.Exists) {
-            # Generate new certificate and convert it to pfx format
-            $openssl = [HsmVault]::X509CertHelper::GetOpenssl().FullName
-            &$openssl req -newkey rsa:2048 -new -nodes -x509 -days $AzConfig.CertExpirationDays -keyout $AzConfig.PrivateCertFile.FullName -out $AzConfig.PublicCertFile.FullName -subj "/C=LV/ST=Rwanda/L=1/O=$($AzConfig.CertName)/OU=IT"
-            if (!$?) { throw [System.Exception]::New('Unexpected error') }
-            &$openssl pkcs12 -in $AzConfig.PublicCertFile.FullName -inkey $AzConfig.PrivateCertFile.FullName -export -out $AzConfig.PfxFile.FullName -passout pass:$([pscredential]::new($env:USERNAME, $Password).GetNetworkCredential().Password)
-            if (!$?) { throw [System.Exception]::New('Unexpected error') }
-        }
-        return [HsmVault]::X509CertHelper::CreateSelfSignedCertificate($AzConfig.CertName, $AzConfig.PfxFile, $Password)
+        return [HsmVault]::X509CertHelper::CreateSelfSignedCertificate("CN=$($AzConfig.CertName)", $AzConfig.PrivateCertFile, $Password, 2048, [System.DateTimeOffset]::Now.AddDays(-1).DateTime, [System.DateTimeOffset]::Now.AddDays($AzConfig.CertExpirationDays).DateTime)
     }
     [guid] GetSessionId() {
         return [HsmVault]::GetSessionId($this)
     }
     static [guid] GetSessionId($HsmVault) {
         # .NOTES
-        # - Does not create real guids; just looks like it :)
-        # - Mainly used to create unique object names with a little bit of info added.
+        # - Creates fake guids, that are mainly used to create unique object names with a little bit of info added.
         $hash = $HsmVault.GetHashCode().ToString()
         return [guid]::new([System.BitConverter]::ToString([System.Text.Encoding]::UTF8.GetBytes(([string]::Concat(([char[]](97..102 + 65..70) | Get-Random -Count (16 - $hash.Length))) + $hash))).Replace("-", "").ToLower().Insert(8, "-").Insert(13, "-").Insert(18, "-").Insert(23, "-"))
     }
