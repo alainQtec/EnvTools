@@ -122,10 +122,9 @@ class HsmVault {
             }, 'Enable Aliases from the previous Azure RM'
         )
         $null = [HsmVault]::RunAsync({ Connect-AzAccount }, 'Connect-AzAccount, Waiting the Browser ...')
-        $null = [HsmVault]::RunAsync({ Set-AzContext -SubscriptionName $this.config.AzureSubscriptionName; New-AzResourceGroup -Name $this.config.AzureResourceGroup.Name -Location $this.config.AzureResourceGroup.Location.ToString() }, 'Set resource Group')
-        $principalId = [HsmVault]::RunAsync({ (Get-AzADUser -UserPrincipalName $this.config.Email.Address).Id }, 'Getting your principal ID ...')
+        $null = [HsmVault]::RunAsync({ Set-AzContext -Subscription $this.config.AzureSubscriptionName; New-AzResourceGroup -Name $this.config.AzureResourceGroup.Name -Location $this.config.AzureResourceGroup.Location.ToString() }, 'Set resource Group')
         Write-Host "[HsmVault] Creating a managed HSM ..." -ForegroundColor Green
-        $null = [HsmVault]::RunAsync({ New-AzKeyVaultManagedHsm -Name $this.config.hsmName -ResourceGroupName $this.config.AzureResourceGroup.Name -Location $this.config.location -Sku Standard_B1 -Administrators $principalId }, 'Create a managed HSM ...')
+        $null = [HsmVault]::RunAsync({ New-AzKeyVaultManagedHsm -Name $this.config.hsmName -ResourceGroupName $this.config.AzureResourceGroup.Name -Location $this.config.location -Sku Standard_B1 -Administrators $([HsmVault]::RunAsync({ (Get-AzADUser -Filter "startsWith(UserPrincipalName,'$($this.config.Email.Address)')").Id }, 'Getting your principal ID ...')) }, 'Create a managed HSM ...')
         Write-Host "[HsmVault] Generate a certificate locally which will be used to Authenticate" -ForegroundColor Green
         $X509VarName = "X509CertHelper_class_$([HsmVault]::VarName_Suffix)";
         if (!$(Get-Variable $X509VarName -ValueOnly -Scope script -ErrorAction Ignore)) {
@@ -134,10 +133,11 @@ class HsmVault {
         }
         $X509CertHelper_class = Get-Variable $X509VarName -ValueOnly -Scope script
         if ($X509CertHelper_class) { . $X509CertHelper_class; [HsmVault]::X509CertHelper = New-Object X509CertHelper }
-        $X509cert = [HsmVault]::CreateSelfSignedCertificate([AzConfig]$this.config, $this.GetSessionId().ToString()); $keyValue = [System.Convert]::ToBase64String($X509cert.GetRawCertData())
+        $X509cert = [HsmVault]::CreateSelfSignedCertificate([AzConfig]$this.config, $this.GetSessionId().ToString());
+        $keyValue = [System.Convert]::ToBase64String($X509cert.GetRawCertData())
 
         $sp = [HsmVault]::RunAsync({
-                New-AzADServicePrincipal -DisplayName $this.config.AzureServicePrincipalAppName -CertValue $keyValue -EndDate $X509cert.NotAfter -StartDate $X509cert.NotBefore
+                New-AzADServicePrincipal -DisplayName $this.config.AzureServicePrincipalAppName -CertValue $keyValue -StartDate $X509cert.NotBefore -EndDate $X509cert.NotAfter
                 do {
                     Write-Host "`nWaiting for the service principal to propagate ..."
                     Start-Sleep -Milliseconds 1800
