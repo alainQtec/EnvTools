@@ -5,63 +5,40 @@ class IDVault {
     # $c = [IO.File]::ReadAllText((Get-Item .\creds.yml).FullName) | ConvertFrom-Yaml
 }
 enum AzureLocation {
-    AustraliaCentral
-    AustraliaCentral2
-    AustraliaEast
-    AustraliaSoutheast
-    BrazilSouth
-    BrazilSoutheast
-    CanadaCentral
-    CanadaEast
-    CentralIndia
-    CentralUS
-    ChinaEast
-    ChinaEast2
-    ChinaNorth
-    ChinaNorth2
-    EastAsia
-    EastUS
-    EastUS2
-    FranceCentral
-    FranceSouth
-    GermanyCentral
-    GermanyNorth
-    GermanyNorthEast
-    GermanyWestCentral
-    JapanEast
-    JapanWest
-    KoreaCentral
-    KoreaSouth
-    NorthCentralUS
-    NorthEurope
-    NorwayEast
-    NorwayWest
-    QatarCentral
-    SouthAfricaNorth
-    SouthAfricaWest
-    SouthCentralUS
-    SoutheastAsia
-    SouthIndia
-    SwedenCentral
-    SwitzerlandNorth
-    SwitzerlandWest
-    UAECentral
-    UAENorth
-    UKSouth
-    UKWest
-    USDoDCentral
-    USDoDEast
-    USGovArizona
-    USGovIowa
-    USGovTexas
-    USGovVirginia
-    WestCentralUS
-    WestEurope
-    WestIndia
-    WestUS
-    WestUS2
-    WestUS3
-    # See Azure [documentation](https://learn.microsoft.com/en-us/dotnet/api/azure.core.azurelocation) for the exhaustive list
+    # I only included avaliable locations for KeyVault/managedHSMs
+    eastus2
+    southcentralus
+    northeurope
+    westeurope
+    canadacentral
+    centralus
+    switzerlandnorth
+    southafricanorth
+    uksouth
+    southeastasia
+    eastasia
+    koreacentral
+    australiacentral
+    westus
+    eastus
+    northcentralus
+    westcentralus
+    westus2
+    westus3
+    canadaeast
+    japaneast
+    uaenorth
+    australiaeast
+    francecentral
+    switzerlandwest
+    centralindia
+    brazilsouth
+    swedencentral
+    qatarcentral
+    southindia
+    polandcentral
+    japanwest
+    norwayeast
 }
 
 #region    HsmVault
@@ -116,45 +93,71 @@ class HsmVault {
         if ([bool][int]$env:Is_HsmVault_Setup) { return };
         Write-Host '[HsmVault] Setting up an Azure Key Vault (One time only) ...' -ForegroundColor Green
         # https://learn.microsoft.com/en-us/azure/key-vault/managed-hsm/quick-create-powershell
-        $null = [HsmVault]::RunAsync({ $AzIsnotInstalled = $null -eq (Get-Module -ListAvailable az)[0];
-                if ($AzIsnotInstalled) { Install-Module -Name Az -AllowClobber -Scope AllUsers };
-                Enable-AzureRmAlias -Scope CurrentUser
-            }, 'Enable Aliases from the previous Azure RM'
-        )
-        $null = [HsmVault]::RunAsync({ Connect-AzAccount }, 'Connect-AzAccount, Waiting the Browser ...')
-        $null = [HsmVault]::RunAsync({ Set-AzContext -Subscription $this.config.AzureSubscriptionName; New-AzResourceGroup -Name $this.config.AzureResourceGroup.Name -Location $this.config.AzureResourceGroup.Location.ToString() }, 'Set resource Group')
-        Write-Host "[HsmVault] Creating a managed HSM ..." -ForegroundColor Green
-        $null = [HsmVault]::RunAsync({ New-AzKeyVaultManagedHsm -Name $this.config.hsmName -ResourceGroupName $this.config.AzureResourceGroup.Name -Location $this.config.location -Sku Standard_B1 -Administrators $([HsmVault]::RunAsync({ (Get-AzADUser -Filter "startsWith(UserPrincipalName,'$($this.config.Email.Address)')").Id }, 'Getting your principal ID ...')) }, 'Create a managed HSM ...')
+        [HsmVault]::Resolve_modules([string[]]('Az.Accounts', 'Az.Resources', 'Az.KeyVault'))
+        Write-Host 'Enable Aliases from the previous Azure RM' -ForegroundColor Green
+        Enable-AzureRmAlias -Scope CurrentUser; $AzConfig = $this.config
+        [HsmVault]::Install_Az_Cli(); $AzureProfile = ConvertFrom-Json -InputObject $(az login) # same as: Connect-AzAccount
+        if ($null -eq $AzureProfile) { throw "Failed to connect azureAccount" }
+        # Checks:
+        # $AzureProfile[1].user.name  -should be $AzConfig.Email.Address
+        # $AzureProfile[1].name       -should be $AzConfig.AzureSubscriptionName
+        $null = [HsmVault]::RunAsync({
+            Set-AzContext -Subscription $AzConfig.AzureSubscriptionName; az account set --subscription $AzConfig.AzureSubscriptionName
+            if ($(try { ![bool](Get-AzResourceGroup -Name $AzConfig.AzureResourceGroup.Name -ErrorAction SilentlyContinue) } catch { if ($_.exception.message -like "*Provided resource group does not exist*") { $true } else { throw $_ } })) {
+                $Location = $AzConfig.AzureResourceGroup.Location.ToString()
+                $resGroup = $(az group create --name $AzConfig.AzureResourceGroup.Name --location $Location --tags Usecase=EnvTools) | ConvertFrom-Json
+                #Same as: New-AzResourceGroup -Name $AzConfig.AzureResourceGroup.Name -Location $Location -Tag @{ Usecase="EnvTools" } -Verbose
+                if (!$resGroup.properties.provisioningState.Equals("Succeeded")) { throw "Failed to create ResourceGroup" }
+            }; Write-Host "Using ResourceGroup Name : '$($AzConfig.AzureResourceGroup.Name)'" -ForegroundColor Green
+        }, 'Set resource Group')
+        try {
+            if ($(az keyvault check-name --name $AzConfig.hsmName | ConvertFrom-Json).reason.Equals("AlreadyExists")) {
+                Write-Host "Using KeyVault $($AzConfig.hsmName)" -ForegroundColor Green
+            } else {
+                Write-Host '[HsmVault] Creating a managed HSM ...' -ForegroundColor Green
+                $null = Update-AzConfig -DisplayBreakingChangeWarning $false
+                $AzObjectId = $(Get-AzADUser -Filter "startsWith(UserPrincipalName,'$($AzConfig.Email.Address.Replace('@','_'))')").Id
+                $ManagedHsm = $(az keyvault create --hsm-name $AzConfig.hsmName --resource-group $AzConfig.AzureResourceGroup.Name --location $Location --administrators $AzObjectId --retention-days 90) | ConvertFrom-Json
+                if ($null -ne $ManagedHsm) {
+                    Write-Host $ManagedHsm.properties.statusMessage -ForegroundColor Green
+                    if ($ManagedHsm.properties.provisioningState.Equals("Succeeded")) {
+                        Write-Host "Keyvault url: $($ManagedHsm.properties.hsmUri)" -ForegroundColor Green
+                    }
+                }
+            }
+        } catch {
+            throw $_.exception
+        }
         Write-Host "[HsmVault] Generate a certificate locally which will be used to Authenticate" -ForegroundColor Green
         $X509VarName = "X509CertHelper_class_$([HsmVault]::VarName_Suffix)";
         if (!$(Get-Variable $X509VarName -ValueOnly -Scope script -ErrorAction Ignore)) {
-            Write-Verbose "Fetching X509CertHelper class (One-time only)" -Verbose ;
+            Write-Verbose "Fetching X509CertHelper class (One-time only)" -Verbose;
             Set-Variable -Name $X509VarName -Scope script -Option ReadOnly -Value ([scriptblock]::Create($((Invoke-RestMethod -Method Get https://api.github.com/gists/d8f277f1d830882c4927c144a99b70cd).files.'X509CertHelper.ps1'.content)));
         }
         $X509CertHelper_class = Get-Variable $X509VarName -ValueOnly -Scope script
         if ($X509CertHelper_class) { . $X509CertHelper_class; [HsmVault]::X509CertHelper = New-Object X509CertHelper }
-        $X509cert = [HsmVault]::CreateSelfSignedCertificate([AzConfig]$this.config, $this.GetSessionId().ToString());
+        $X509cert = [HsmVault]::CreateSelfSignedCertificate([AzConfig]$AzConfig, $this.GetSessionId().ToString());
         $keyValue = [System.Convert]::ToBase64String($X509cert.GetRawCertData())
 
         $sp = [HsmVault]::RunAsync({
-                New-AzADServicePrincipal -DisplayName $this.config.AzureServicePrincipalAppName -CertValue $keyValue -StartDate $X509cert.NotBefore -EndDate $X509cert.NotAfter
+                New-AzADServicePrincipal -DisplayName $AzConfig.AzureServicePrincipalAppName -CertValue $keyValue -StartDate $X509cert.NotBefore -EndDate $X509cert.NotAfter
                 do {
                     Write-Host "`nWaiting for the service principal to propagate ..."
                     Start-Sleep -Milliseconds 1800
-                } until ($null -ne (Get-AzADServicePrincipal -DisplayName $this.config.AzureServicePrincipalAppName))
-                Get-AzSubscription -SubscriptionName $this.config.AzureSubscriptionName
+                } until ($null -ne (Get-AzADServicePrincipal -DisplayName $AzConfig.AzureServicePrincipalAppName))
+                Get-AzSubscription -SubscriptionName $AzConfig.AzureSubscriptionName
             },
             'Generate a service principal'
         )
-        $null = $this.config.Set('ApplicationId', $sp.Id)
-        $null = [HsmVault]::RunAsync({ New-AzRoleAssignment -RoleDefinitionName Reader -ServicePrincipalName $sp.Name -ResourceGroupName $this.config.AzureResourceGroup.Name -ResourceType "Microsoft.KeyVault/vaults" -ResourceName $this.config.hsmName }, 'Assign the appropriate role to the service principal ...')
-        $null = [HsmVault]::RunAsync({ Set-AzKeyVaultAccessPolicy -VaultName $this.config.hsmName -ObjectId $sp.Id -PermissionsToSecrets Get, Set }, 'Set the appropriate access to the secrets for the application ...')
+        $null = $AzConfig.Set('ApplicationId', $sp.Id)
+        $null = [HsmVault]::RunAsync({ New-AzRoleAssignment -RoleDefinitionName Reader -ServicePrincipalName $sp.Name -ResourceGroupName $AzConfig.AzureResourceGroup.Name -ResourceType "Microsoft.KeyVault/vaults" -ResourceName $AzConfig.hsmName }, 'Assign the appropriate role to the service principal ...')
+        $null = [HsmVault]::RunAsync({ Set-AzKeyVaultAccessPolicy -VaultName $AzConfig.hsmName -ObjectId $sp.Id -PermissionsToSecrets Get, Set }, 'Set the appropriate access to the secrets for the application ...')
 
         Set-Item -Path ([IO.Path]::Combine('Env:', 'Is_HsmVault_Setup')) -Value 1 -Force
         Write-Host ''
-        Write-Host -ForegroundColor Blue "Tenant ID: $($this.config.AzureTenantID)"
-        Write-Host -ForegroundColor Blue "Application ID: $($this.config.ApplicationId)"
-        Write-Host -ForegroundColor Blue "Azure Key Vault Name: $($this.config.hsmName)"
+        Write-Host -ForegroundColor Blue "Tenant ID: $($AzConfig.AzureTenantID)"
+        Write-Host -ForegroundColor Blue "Application ID: $($AzConfig.ApplicationId)"
+        Write-Host -ForegroundColor Blue "Azure Key Vault Name: $($AzConfig.hsmName)"
         Write-Host -ForegroundColor Blue "Certificate Subject Name: 'CN=ImpactKeyVault'"
         Disconnect-AzAccount
     }
@@ -230,8 +233,10 @@ class HsmVault {
             Start-Sleep -Milliseconds 100
         } until ($job.IsCompleted)
         Write-Progress -Activity "[HsmVault]" -Status "command Complete." -PercentComplete 100
-        $Comdresult = $PsInstance.EndInvoke($job)
-        $PsInstance.Dispose(); $PsInstance.Runspace.CloseAsync()
+        if ($null -ne $PsInstance) {
+            $Comdresult = $PsInstance.EndInvoke($job);
+            $PsInstance.Dispose(); $PsInstance.Runspace.CloseAsync()
+        }
         return $Comdresult
     }
     static [void] SetSessionCreds([guid]$sessionId) {
@@ -306,6 +311,19 @@ class HsmVault {
         $private:Sec = $null; Set-Variable -Name Sec -Scope Local -Visibility Private -Option Private -Value ([System.Security.SecureString]::new());
         $plainText.toCharArray().forEach({ [void]$Sec.AppendChar($_) }); $Sec.MakeReadOnly()
         return $Sec
+    }
+    static hidden [void] Install_Az_Cli() {
+        if (!(Get-Command az -CommandType Application -ErrorAction SilentlyContinue)) {
+            winget install -e --id Microsoft.AzureCLI
+            [HsmVault]::refreshEnv()
+        } else {
+            Write-Verbose "Az Cli is already Installed"
+        }
+    }
+    static hidden [void] refreshEnv() {
+        Write-Host '[HsmVault] A new app was installed; we need to refresh this Session Environment ...' -ForegroundColor Green
+        . ([scriptblock]::Create((Invoke-RestMethod -Verbose:$false -Method Get https://api.github.com/gists/8b4ddc0302a9262cf7fc25e919227a2f).files.'Update_Session_Env.ps1'.content))
+        Update-SessionEnvironment
     }
     static hidden [void] Resolve_modules([string[]]$Names) {
         $varName = "Resolve_Module_Fn_$([HsmVault]::VarName_Suffix)"; # let's just hope no vaiable has the same name :|
@@ -402,7 +420,7 @@ class AzureResourceGroup {
 
     AzureResourceGroup([string]$Name) {
         $this.Name = $Name
-        $this.Location = [AzureLocation]::UKWest
+        $this.Location = [AzureLocation]::uksouth
     }
     AzureResourceGroup([string]$name, [AzureLocation]$location) {
         $this.Name = $name
