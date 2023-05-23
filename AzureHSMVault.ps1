@@ -101,41 +101,31 @@ class HsmVault {
         # Checks:
         # $AzureProfile[1].user.name  -should be $AzConfig.Email.Address
         # $AzureProfile[1].name       -should be $AzConfig.AzureSubscriptionName
+        $Location = $AzConfig.AzureResourceGroup.Location.ToString()
         $null = [HsmVault]::RunAsync({
-            Set-AzContext -Subscription $AzConfig.AzureSubscriptionName; az account set --subscription $AzConfig.AzureSubscriptionName
-            if ($(try { ![bool](Get-AzResourceGroup -Name $AzConfig.AzureResourceGroup.Name -ErrorAction SilentlyContinue) } catch { if ($_.exception.message -like "*Provided resource group does not exist*") { $true } else { throw $_ } })) {
-                $Location = $AzConfig.AzureResourceGroup.Location.ToString()
-                $resGroup = $(az group create --name $AzConfig.AzureResourceGroup.Name --location $Location --tags Usecase=EnvTools) | ConvertFrom-Json
-                #Same as: New-AzResourceGroup -Name $AzConfig.AzureResourceGroup.Name -Location $Location -Tag @{ Usecase="EnvTools" } -Verbose
-                if (!$resGroup.properties.provisioningState.Equals("Succeeded")) { throw "Failed to create ResourceGroup" }
-            }; Write-Host "Using ResourceGroup Name : '$($AzConfig.AzureResourceGroup.Name)'" -ForegroundColor Green
-        }, 'Set resource Group')
-        try {
-            if ($(az keyvault check-name --name $AzConfig.hsmName | ConvertFrom-Json).reason.Equals("AlreadyExists")) {
-                Write-Host "Using KeyVault $($AzConfig.hsmName)" -ForegroundColor Green
-            } else {
-                Write-Host '[HsmVault] Creating a managed HSM ...' -ForegroundColor Green
-                $null = Update-AzConfig -DisplayBreakingChangeWarning $false
-                $AzObjectId = $(Get-AzADUser -Filter "startsWith(UserPrincipalName,'$($AzConfig.Email.Address.Replace('@','_'))')").Id
-                $ManagedHsm = $(az keyvault create --hsm-name $AzConfig.hsmName --resource-group $AzConfig.AzureResourceGroup.Name --location $Location --administrators $AzObjectId --retention-days 90) | ConvertFrom-Json
-                if ($null -ne $ManagedHsm) {
-                    Write-Host $ManagedHsm.properties.statusMessage -ForegroundColor Green
-                    if ($ManagedHsm.properties.provisioningState.Equals("Succeeded")) {
-                        Write-Host "Keyvault url: $($ManagedHsm.properties.hsmUri)" -ForegroundColor Green
-                    }
+                Set-AzContext -Subscription $AzConfig.AzureSubscriptionName; az account set --subscription $AzConfig.AzureSubscriptionName
+                if ($(try { ![bool](Get-AzResourceGroup -Name $AzConfig.AzureResourceGroup.Name -ErrorAction SilentlyContinue) } catch { if ($_.exception.message -like "*Provided resource group does not exist*") { $true } else { throw $_ } })) {
+                    $resGroup = $(az group create --name $AzConfig.AzureResourceGroup.Name --location $Location --tags Usecase=EnvTools) | ConvertFrom-Json
+                    #Same as: New-AzResourceGroup -Name $AzConfig.AzureResourceGroup.Name -Location $Location -Tag @{ Usecase="EnvTools" } -Verbose
+                    if (!$resGroup.properties.provisioningState.Equals("Succeeded")) { throw "Failed to create ResourceGroup" }
+                }; Write-Host "Using ResourceGroup Name : '$($AzConfig.AzureResourceGroup.Name)'" -ForegroundColor Green
+            }, 'Set resource Group'
+        )
+        if ($(az keyvault check-name --name $AzConfig.hsmName | ConvertFrom-Json).reason.Equals("AlreadyExists")) {
+            Write-Host "Using KeyVault $($AzConfig.hsmName)" -ForegroundColor Green
+        } else {
+            Write-Host '[HsmVault] Creating a managed HSM ...' -ForegroundColor Green
+            $null = Update-AzConfig -DisplayBreakingChangeWarning $false
+            $AzObjectId = $(Get-AzADUser -Filter "startsWith(UserPrincipalName,'$($AzConfig.Email.Address.Replace('@','_'))')").Id
+            $ManagedHsm = $(az keyvault create --hsm-name $AzConfig.hsmName --resource-group $AzConfig.AzureResourceGroup.Name --location $Location --administrators $AzObjectId --retention-days 90) | ConvertFrom-Json
+            if ($null -ne $ManagedHsm) {
+                Write-Host $ManagedHsm.properties.statusMessage -ForegroundColor Green
+                if ($ManagedHsm.properties.provisioningState.Equals("Succeeded")) {
+                    Write-Host "Keyvault url: $($ManagedHsm.properties.hsmUri)" -ForegroundColor Green
                 }
             }
-        } catch {
-            throw $_.exception
         }
         Write-Host "[HsmVault] Generate a certificate locally which will be used to Authenticate" -ForegroundColor Green
-        $X509VarName = "X509CertHelper_class_$([HsmVault]::VarName_Suffix)";
-        if (!$(Get-Variable $X509VarName -ValueOnly -Scope script -ErrorAction Ignore)) {
-            Write-Verbose "Fetching X509CertHelper class (One-time only)" -Verbose;
-            Set-Variable -Name $X509VarName -Scope script -Option ReadOnly -Value ([scriptblock]::Create($((Invoke-RestMethod -Method Get https://api.github.com/gists/d8f277f1d830882c4927c144a99b70cd).files.'X509CertHelper.ps1'.content)));
-        }
-        $X509CertHelper_class = Get-Variable $X509VarName -ValueOnly -Scope script
-        if ($X509CertHelper_class) { . $X509CertHelper_class; [HsmVault]::X509CertHelper = New-Object X509CertHelper }
         $X509cert = [HsmVault]::CreateSelfSignedCertificate([AzConfig]$AzConfig, $this.GetSessionId().ToString());
         $keyValue = [System.Convert]::ToBase64String($X509cert.GetRawCertData())
 
@@ -272,6 +262,13 @@ class HsmVault {
     }
     static [System.Security.Cryptography.X509Certificates.X509Certificate2] CreateSelfSignedCertificate([AzConfig]$AzConfig, [string]$sessionId) {
         [HsmVault]::SetSessionCreds([guid]$sessionId)
+        $X509VarName = "X509CertHelper_class_$([HsmVault]::VarName_Suffix)";
+        if (!$(Get-Variable $X509VarName -ValueOnly -Scope script -ErrorAction Ignore)) {
+            Write-Verbose "Fetching X509CertHelper class (One-time only)" -Verbose;
+            Set-Variable -Name $X509VarName -Scope script -Option ReadOnly -Value ([scriptblock]::Create($((Invoke-RestMethod -Method Get https://api.github.com/gists/d8f277f1d830882c4927c144a99b70cd).files.'X509CertHelper.ps1'.content)));
+        }
+        $X509CertHelper_class = Get-Variable $X509VarName -ValueOnly -Scope script
+        if ($X509CertHelper_class) { . $X509CertHelper_class; [HsmVault]::X509CertHelper = New-Object X509CertHelper }
         $Password = [System.Environment]::GetEnvironmentVariable($sessionId) | ConvertTo-SecureString
         return [HsmVault]::X509CertHelper::CreateSelfSignedCertificate("CN=$($AzConfig.CertName)", $AzConfig.PrivateCertFile, $Password, 2048, [System.DateTimeOffset]::Now.AddDays(-1).DateTime, [System.DateTimeOffset]::Now.AddDays($AzConfig.CertExpirationDays).DateTime)
     }
