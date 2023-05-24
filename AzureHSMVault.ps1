@@ -94,13 +94,13 @@ class HsmVault {
         Write-Host '[HsmVault] Setting up an Azure Key Vault (One time only) ...' -ForegroundColor Green
         # https://learn.microsoft.com/en-us/azure/key-vault/managed-hsm/quick-create-powershell
         [HsmVault]::Resolve_modules([string[]]('Az.Accounts', 'Az.Resources', 'Az.KeyVault'))
-        Write-Host 'Enable Aliases from the previous Azure RM' -ForegroundColor Green
-        Enable-AzureRmAlias -Scope CurrentUser; $AzConfig = $this.config
-        [HsmVault]::Install_Az_Cli(); $AzureProfile = ConvertFrom-Json -InputObject $(az login) # same as: Connect-AzAccount
+        [HsmVault]::Resolve_AzCli(); $AzureProfile = ConvertFrom-Json -InputObject $(az login) # same as: Connect-AzAccount
         if ($null -eq $AzureProfile) { throw "Failed to connect azureAccount" }
         # Checks:
         # $AzureProfile[1].user.name  -should be $AzConfig.Email.Address
         # $AzureProfile[1].name       -should be $AzConfig.AzureSubscriptionName
+        Write-Host 'Enable Aliases from the previous Azure RM' -ForegroundColor Green
+        Enable-AzureRmAlias -Scope CurrentUser; $AzConfig = $this.config
         $Location = $AzConfig.AzureResourceGroup.Location.ToString()
         $null = [HsmVault]::RunAsync({
                 Set-AzContext -Subscription $AzConfig.AzureSubscriptionName; az account set --subscription $AzConfig.AzureSubscriptionName
@@ -309,7 +309,7 @@ class HsmVault {
         $plainText.toCharArray().forEach({ [void]$Sec.AppendChar($_) }); $Sec.MakeReadOnly()
         return $Sec
     }
-    static hidden [void] Install_Az_Cli() {
+    static hidden [void] Resolve_AzCli() {
         if (!(Get-Command az -CommandType Application -ErrorAction SilentlyContinue)) {
             winget install -e --id Microsoft.AzureCLI
             [HsmVault]::refreshEnv()
@@ -318,18 +318,30 @@ class HsmVault {
         }
     }
     static hidden [void] refreshEnv() {
-        Write-Host '[HsmVault] A new app was installed; we need to refresh this Session Environment ...' -ForegroundColor Green
-        . ([scriptblock]::Create((Invoke-RestMethod -Verbose:$false -Method Get https://api.github.com/gists/8b4ddc0302a9262cf7fc25e919227a2f).files.'Update_Session_Env.ps1'.content))
-        Update-SessionEnvironment
+        $refrshrVarName = "refrshr_script_$([HsmVault]::VarName_Suffix)";
+        if (!$(Get-Variable $refrshrVarName -ValueOnly -Scope script -ErrorAction Ignore)) {
+            Set-Variable -Name $refrshrVarName -Scope script -Option ReadOnly -Value ([scriptblock]::Create((Invoke-RestMethod -Verbose:$false -Method Get https://api.github.com/gists/8b4ddc0302a9262cf7fc25e919227a2f).files.'Update_Session_Env.ps1'.content));
+        }
+        $refrshr_script = Get-Variable $refrshrVarName -ValueOnly -Scope script
+        if ($refrshr_script) {
+            Write-Host '[HsmVault] refreshing this Session Environment ...' -ForegroundColor Green
+            . $refrshr_script; Update-SessionEnvironment
+        } else {
+            throw "Failed to fetch refresher script!"
+        }
     }
     static hidden [void] Resolve_modules([string[]]$Names) {
-        $varName = "Resolve_Module_Fn_$([HsmVault]::VarName_Suffix)"; # let's just hope no vaiable has the same name :|
+        $varName = "resolver_script_$([HsmVault]::VarName_Suffix)";
         if (!$(Get-Variable $varName -ValueOnly -Scope script -ErrorAction Ignore)) {
-            Write-Verbose "Fetching Resolve-Module.ps1 script (One-time only)" -Verbose ; # Fetch it Once only, To Avoid spamming the github API :)
+            # Fetch it Once only, To Avoid spamming the github API :)
             Set-Variable -Name $varName -Scope script -Option ReadOnly -Value ([scriptblock]::Create($((Invoke-RestMethod -Method Get https://api.github.com/gists/7629f35f93ae89a525204bfd9931b366).files.'Resolve-Module.ps1'.content)))
         }
-        . $(Get-Variable $varName -ValueOnly -Scope script)
-        Resolve-module -Name $Names
+        $resolver_script = Get-Variable $varName -ValueOnly -Scope script
+        if ($resolver_script) {
+            . $resolver_script; Resolve-module -Name $Names
+        } else {
+            throw "Failed to fetch resolver script!"
+        }
     }
 }
 #endregion HsmVault
