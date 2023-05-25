@@ -1,9 +1,9 @@
 if ($IsLinux) {
     curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
 } elseif ($IsMacOS) {
-    <# Action when this condition is true #>
+    brew update && brew install azure-cli
 } elseif ($IsWindows) {
-    <# Action when this condition is true #>
+    Invoke-WebRequest -Uri https://aka.ms/installazurecliwindows -OutFile .\AzureCLI.msi; Start-Process msiexec.exe -Wait -ArgumentList '/I AzureCLI.msi /quiet'; Remove-Item .\AzureCLI.msi
 } else {
     throw "Unknowsn os"
 }
