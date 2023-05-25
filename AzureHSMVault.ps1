@@ -1,8 +1,9 @@
 #!/usr/bin/env pwsh
 #region    Classes
 class IDVault {
-    IDVault() {}
-    # $c = [IO.File]::ReadAllText((Get-Item .\creds.yml).FullName) | ConvertFrom-Yaml
+    IDVault() {
+        # $creds = ([IO.File]::ReadAllText((Get-Item .\creds.yml).FullName) | ConvertFrom-Yaml).creds
+    }
 }
 enum AzureLocation {
     # I only included avaliable locations for KeyVault/managedHSMs
