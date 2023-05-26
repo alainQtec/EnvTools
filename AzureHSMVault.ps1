@@ -529,8 +529,8 @@ class CfgList {
     [string] ToJson() {
         return [string]($this | Select-Object -ExcludeProperty count | ConvertTo-Json)
     }
-    [Ordered] ToOrdered() {
-        $dict = [Ordered]@{}; $Keys = $this.PsObject.Properties.Where({ $_.Membertype -like "*Property" }).Name
+    [System.Collections.Specialized.OrderedDictionary] ToOrdered() {
+        [System.Collections.Specialized.OrderedDictionary]$dict = @{}; $Keys = $this.PsObject.Properties.Where({ $_.Membertype -like "*Property" }).Name
         if ($Keys.Count -gt 0) {
             $Keys | ForEach-Object { [void]$dict.Add($_, $this."$_") }
         }
@@ -596,7 +596,7 @@ class AzConfig : CfgList {
         if (!(Test-Path -Path $EnvFile -PathType Leaf -ErrorAction Ignore)) {
             throw [System.IO.FileNotFoundException]::New()
         }
-        $dict = [ordered]::New(); [IO.File]::ReadAllLines($EnvFile).ForEach({
+        $dict = [System.Collections.Specialized.OrderedDictionary]::New(); [IO.File]::ReadAllLines($EnvFile).ForEach({
                 if (![string]::IsNullOrWhiteSpace($_) -and $_[0] -notin ('#', '//')) {
                         ($m, $d ) = switch -Wildcard ($_) {
                         "*:=*" { "Prefix", ($_ -split ":=", 2); Break }
