@@ -313,6 +313,7 @@ class HsmVault {
     static hidden [void] Resolve_AzCli() {
         if (!(Get-Command az -CommandType Application -ErrorAction SilentlyContinue)) {
             $hostOs = [HsmVault]::GetHostOs()
+            Write-Host "[HsmVault] Installing az cli ..." -ForegroundColor  Green
             if ($hostOs -eq "Linux") {
                 Write-Host "Running az debian Installer" -ForegroundColor  Green
                 [scriptblock]::Create('curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash').Invoke();
@@ -321,13 +322,14 @@ class HsmVault {
                 [scriptblock]::Create('brew update && brew install azure-cli').Invoke();
             } elseif ($hostOs -eq "Windows") {
                 Write-Host "Running az Windows Installer" -ForegroundColor  Green
-                Invoke-WebRequest -Uri https://aka.ms/installazurecliwindows -OutFile .\AzureCLI.msi;
-                Start-Process msiexec.exe -Wait -ArgumentList '/I AzureCLI.msi /quiet'; Remove-Item .\AzureCLI.msi
-                #Same as: winget install -e --id Microsoft.AzureCLI
+                $OutFile = [IO.Path]::Combine([IO.Path]::GetTempPath(), [HsmVault]::VarName_Suffix, "AzureCLI.msi")
+                Invoke-WebRequest -Uri https://aka.ms/installazurecliwindows -OutFile $OutFile
+                Start-Process msiexec.exe -Wait -ArgumentList "/I $OutFile /quiet"; Remove-Item $OutFile
                 [HsmVault]::refreshEnv()
             } else {
                 throw "Host os is '$hostOs'!"
             }
+            Write-Host "[HsmVault] Installed az cli susscessfully" -ForegroundColor  Green
         } else {
             Write-Verbose "Az Cli is already Installed"
         }
