@@ -1,7 +1,5 @@
-﻿using Microsoft.Win32;
-using System;
+﻿using System;
 using System.Collections.Generic;
-using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -10,27 +8,25 @@ using Newtonsoft.Json.Linq;
 using System.Text.RegularExpressions;
 using Newtonsoft.Json;
 
-namespace BrowserSelect
+public class Browser
 {
-    public class Browser
-    {
-        public string name;
-        public string exec;
-        public string icon;
-        public string additionalArgs = "";
+    public string name;
+    public string exec;
+    public string icon;
+    public string additionalArgs = "";
 
-        public string Identifier => $"{exec} {additionalArgs}";
+    public string Identifier => $"{exec} {additionalArgs}";
 
         public Image string2Icon()
         {
             byte[] byteArray = Convert.FromBase64String(this.icon);
-            Bitmap newIcon;
+            System.Drawing.Bitmap newIcon;
             using (MemoryStream stream = new MemoryStream(byteArray))
             {
-                newIcon = new Bitmap(stream);
+                newIcon = new System.Drawing.Bitmap(stream);
             }
-          
-            return newIcon; 
+
+            return newIcon;
         }
 
         public string private_arg
@@ -62,13 +58,13 @@ namespace BrowserSelect
         {
             return BrowserFinder.find().First(b => b.name == s);
         }
-    }
-    static class BrowserFinder
-    {
+}
+static class BrowserFinder
+{
 
-        public static string icon2String(Icon myIcon)
-        {
-            byte[] bytes;
+    public static string icon2String(Icon myIcon)
+    {
+        byte[] bytes;
             using (var ms = new MemoryStream())
             {
                 myIcon.ToBitmap().Save(ms, System.Drawing.Imaging.ImageFormat.Png);
@@ -78,11 +74,11 @@ namespace BrowserSelect
             string iconString = Convert.ToBase64String(bytes);
 
             return iconString;
-        }
+    }
 
-        public static List<Browser> find(bool update = false)
-        {
-          
+    public static List<Browser> find(bool update = false)
+    {
+
             List<Browser> browsers = new List<Browser>();
             if (Properties.Settings.Default.BrowserList != "" && !update)
             {
@@ -116,9 +112,9 @@ namespace BrowserSelect
                     });
 
                 //gather browsers from registry
-                using (RegistryKey hklm = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry32))
+                using ([Microsoft.Win32.RegistryKey] hklm = [Microsoft.Win32.RegistryKey]::OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry32))
                     browsers.AddRange(find(hklm));
-                using (RegistryKey hkcu = RegistryKey.OpenBaseKey(RegistryHive.CurrentUser, RegistryView.Registry32))
+                using ([Microsoft.Win32.RegistryKey] hkcu = [Microsoft.Win32.RegistryKey]::OpenBaseKey(RegistryHive.CurrentUser, RegistryView.Registry32))
                     browsers.AddRange(find(hkcu));
 
                 //remove myself
@@ -130,7 +126,7 @@ namespace BrowserSelect
 
                 //check for edge chromium profiles
                 AddChromeProfiles(browsers, "Microsoft Edge", @"Microsoft\Edge\User Data", "Edge Profile.ico");
-                
+
                 //Check for Chrome Profiles
                 AddChromeProfiles(browsers, "Google Chrome", @"Google\Chrome\User Data", "Google Profile.ico");
 
@@ -139,11 +135,11 @@ namespace BrowserSelect
                 Properties.Settings.Default.Save();
             }
 
-            return browsers;
-        }
+        return browsers;
+    }
 
-        private static void AddChromeProfiles(List<Browser> browsers, string BrowserName, string VendorDataFolder, string IconFilename)
-        {
+    private static void AddChromeProfiles(List<Browser> browsers, string BrowserName, string VendorDataFolder, string IconFilename)
+    {
             Browser BrowserChrome = browsers.FirstOrDefault(x => x.name == BrowserName);
             if (BrowserChrome != null)
             {
@@ -167,15 +163,15 @@ namespace BrowserSelect
                     browsers = browsers.OrderBy(x => x.name).ToList();
                 }
             }
-        }
-        private static string GetChromeProfileName(string FullProfilePath)
-        {
+    }
+    private static string GetChromeProfileName(string FullProfilePath)
+    {
             dynamic ProfilePreferences = JObject.Parse(File.ReadAllText(FullProfilePath + @"\Preferences"));
             return ProfilePreferences.profile.name;
-        }
-        
-        private static List<string> FindChromeProfiles(string ChromeUserDataDir, string IconFilename)
-        {
+    }
+
+    private static List<string> FindChromeProfiles(string ChromeUserDataDir, string IconFilename)
+    {
             List<string> Profiles = new List<string>();
             var ProfileDirs = Directory.GetFiles(ChromeUserDataDir, IconFilename, SearchOption.AllDirectories).Select(Path.GetDirectoryName);
             foreach (var Profile in ProfileDirs)
@@ -183,13 +179,13 @@ namespace BrowserSelect
                 Profiles.Add(Profile.Substring(ChromeUserDataDir.Length + 1));
             }
             return Profiles;
-        }
+    }
 
-        private static List<Browser> find(RegistryKey hklm)
-        {
+    private static List<Browser> find([Microsoft.Win32.RegistryKey]hklm)
+    {
             List<Browser> browsers = new List<Browser>();
             // startmenu internet key
-            RegistryKey smi = hklm.OpenSubKey(@"SOFTWARE\Clients\StartMenuInternet");
+            [Microsoft.Win32.RegistryKey]smi = hklm.OpenSubKey(@"SOFTWARE\Clients\StartMenuInternet");
             if (smi != null)
                 foreach (var browser in smi.GetSubKeyNames())
                 {
@@ -242,6 +238,5 @@ namespace BrowserSelect
                     }
                 }
             return browsers;
-        }
     }
 }
