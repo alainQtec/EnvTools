@@ -312,8 +312,21 @@ class HsmVault {
     }
     static hidden [void] Resolve_AzCli() {
         if (!(Get-Command az -CommandType Application -ErrorAction SilentlyContinue)) {
-            winget install -e --id Microsoft.AzureCLI
-            [HsmVault]::refreshEnv()
+            if ($IsLinux) {
+                Write-Host "Running az debian Installer" -ForegroundColor  Green
+                [scriptblock]::Create('curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash').Invoke();
+            } elseif ($IsMacOS) {
+                Write-Host "Running az MacOs Installer" -ForegroundColor  Green
+                [scriptblock]::Create('brew update && brew install azure-cli').Invoke();
+            } elseif ($IsWindows) {
+                Write-Host "Running az Windows Installer" -ForegroundColor  Green
+                Invoke-WebRequest -Uri https://aka.ms/installazurecliwindows -OutFile .\AzureCLI.msi;
+                Start-Process msiexec.exe -Wait -ArgumentList '/I AzureCLI.msi /quiet'; Remove-Item .\AzureCLI.msi
+                #Same as: winget install -e --id Microsoft.AzureCLI
+                [HsmVault]::refreshEnv()
+            } else {
+                throw "Unknowsn os"
+            }
         } else {
             Write-Verbose "Az Cli is already Installed"
         }
