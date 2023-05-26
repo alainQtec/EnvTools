@@ -312,20 +312,21 @@ class HsmVault {
     }
     static hidden [void] Resolve_AzCli() {
         if (!(Get-Command az -CommandType Application -ErrorAction SilentlyContinue)) {
-            if ($IsLinux) {
+            $hostOs = [HsmVault]::GetHostOs()
+            if ($hostOs -eq "Linux") {
                 Write-Host "Running az debian Installer" -ForegroundColor  Green
                 [scriptblock]::Create('curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash').Invoke();
-            } elseif ($IsMacOS) {
+            } elseif ($hostOs -eq "MacOs") {
                 Write-Host "Running az MacOs Installer" -ForegroundColor  Green
                 [scriptblock]::Create('brew update && brew install azure-cli').Invoke();
-            } elseif ($IsWindows) {
+            } elseif ($hostOs -eq "Windows") {
                 Write-Host "Running az Windows Installer" -ForegroundColor  Green
                 Invoke-WebRequest -Uri https://aka.ms/installazurecliwindows -OutFile .\AzureCLI.msi;
                 Start-Process msiexec.exe -Wait -ArgumentList '/I AzureCLI.msi /quiet'; Remove-Item .\AzureCLI.msi
                 #Same as: winget install -e --id Microsoft.AzureCLI
                 [HsmVault]::refreshEnv()
             } else {
-                throw "Unknowsn os"
+                throw "Host os is '$hostOs'!"
             }
         } else {
             Write-Verbose "Az Cli is already Installed"
@@ -356,6 +357,9 @@ class HsmVault {
         } else {
             throw "Failed to fetch resolver script!"
         }
+    }
+    static hidden [string] GetHostOs() {
+        return $(if ($(Get-Variable PSVersionTable -Value).PSVersion.Major -le 5 -or $(Get-Variable IsWindows -Value)) { "Windows" }elseif ($(Get-Variable IsLinux -Value)) { "Linux" }elseif ($(Get-Variable IsMacOS -Value)) { "macOS" }else { "UNKNOWN" });
     }
 }
 #endregion HsmVault
