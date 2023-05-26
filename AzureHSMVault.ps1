@@ -1,4 +1,7 @@
 #!/usr/bin/env pwsh
+
+
+
 #region    Classes
 class IDVault {
     IDVault() {
@@ -91,6 +94,12 @@ class HsmVault {
         Write-Host "[HsmVault] Azure account Authentication complete." -ForegroundColor Green
     }
     [void] Setup() {
+        # Step 0 — checking Prerequisites
+        # Step 1 — Installing Vault
+        # Step 2 — Configuring Vault
+        # Step 3 — Initializing Vault
+        # Step 4 — Reading and Writing Secrets
+        # Step 5 — Creating an Authorization Policy
         if ([bool][int]$env:Is_HsmVault_Setup) { return };
         Write-Host '[HsmVault] Setting up an Azure Key Vault (One time only) ...' -ForegroundColor Green
         # https://learn.microsoft.com/en-us/azure/key-vault/managed-hsm/quick-create-powershell
@@ -327,11 +336,11 @@ class HsmVault {
                 Start-Process msiexec.exe -Wait -ArgumentList "/I $OutFile /quiet"; Remove-Item $OutFile
                 [HsmVault]::refreshEnv()
             } else {
-                throw "Host os is '$hostOs'!"
+                throw "Error: Unsuported Host os is '$hostOs'!"
             }
             Write-Host "[HsmVault] Installed az cli susscessfully" -ForegroundColor  Green
         } else {
-            Write-Verbose "Az Cli is already Installed"
+            Write-Host "Az Cli is already Installed" -ForegroundColor Green
         }
     }
     static hidden [void] refreshEnv() {
