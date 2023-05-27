@@ -103,7 +103,7 @@ class HsmVault {
         if ([bool][int]$env:Is_HsmVault_Setup) { return };
         Write-Host '[HsmVault] Setting up an Azure Key Vault (One time only) ...' -ForegroundColor Green
         # https://learn.microsoft.com/en-us/azure/key-vault/managed-hsm/quick-create-powershell
-        [HsmVault]::Resolve_modules([string[]]('Az.Accounts', 'Az.Resources', 'Az.KeyVault'))
+        [HsmVault]::Resolve_modules(@('Az.Accounts', 'Az.Resources', 'Az.KeyVault'))
         [HsmVault]::Resolve_AzCli(); $AzureProfile = ConvertFrom-Json -InputObject $(az login) # same as: Connect-AzAccount
         if ($null -eq $AzureProfile) { throw "Failed to connect azureAccount" }
         # Checks:
