@@ -36,13 +36,12 @@
         </Grid>
         <Grid Name="DarkBgOverlayLayer" Panel.ZIndex="999" Visibility="Collapsed" Background="Black" Opacity="0.5"></Grid>
         <Grid>
-        <Grid>
-            <materialDesign:Card Name="HsmConfigLayer" Panel.ZIndex="1000" Visibility="Hidden" Height="500" Width="480" Margin="20" HorizontalAlignment="Center" VerticalAlignment="Center">
+        <materialDesign:Card Name="HsmConfigLayer" Panel.ZIndex="1000" Visibility="Hidden" Height="500" Width="480" Margin="20" HorizontalAlignment="Center" VerticalAlignment="Center">
                 <Grid>
-                                    <Grid.RowDefinitions>
-                                        <RowDefinition Height="Auto" />
-                                        <RowDefinition Height="Auto" />
-                                        <RowDefinition Height="Auto" />
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
                                     </Grid.RowDefinitions>
                                     <TextBlock Text="Azure Hsm vault Config" Grid.Row="0" Padding="20" FontWeight="Bold" Style="{StaticResource MaterialDesignHeadline5TextBlock}"/>
                                     <Button Name="Btn_HsmConfigLayer_Close" Width="25" Height="25" Content="x" Grid.Row="0" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,10,0" ToolTip="Close">
@@ -147,7 +146,6 @@
                                     </StackPanel>
                     </Grid>
             </materialDesign:Card>
-        </Grid>
         <Border CornerRadius="10" Background="White">
             <TabControl
                 Style="{StaticResource MaterialDesignFilledTabControl}" TabStripPlacement="Left">
