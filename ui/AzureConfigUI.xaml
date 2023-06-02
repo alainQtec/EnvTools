@@ -53,8 +53,10 @@
                                             </ControlTemplate>
                                         </Button.Template>
                                     </Button>
-                                    <Grid Grid.Row="1" Name="HsmConfigForm" Margin="20">
-                                        <!-- <Grid.RowDefinitions>
+                                    <ScrollViewer>
+                                    </ScrollViewer>
+                                    <Grid Grid.Row="1" Name="HsmConfigForm" Margin="20" VerticalScrollBarVisibility="Auto">
+                                        <Grid.RowDefinitions>
                                             <RowDefinition Height="Auto" />
                                             <RowDefinition Height="Auto" />
                                             <RowDefinition Height="Auto" />
@@ -66,7 +68,12 @@
                                             <RowDefinition Height="Auto" />
                                             <RowDefinition Height="Auto" />
                                             <RowDefinition Height="Auto" />
-                                        </Grid.RowDefinitions> -->
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="Auto" />
+                                        </Grid.RowDefinitions>
                                         
                                         
                                         <ComboBox Name="Az_Hsm_Form_ComboBox_Make" Grid.Column="0" Grid.Row="0" SelectedItem="{Binding txt}" Style="{StaticResource MaterialDesignOutlinedComboBox}" 
