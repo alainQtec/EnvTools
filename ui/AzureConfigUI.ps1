@@ -430,7 +430,7 @@ $Btn_HsmConfigLayer_Close.Add_Click({
         )
         $DarkBgOverlayLayer.Visibility = "Hidden"
         $HsmConfigLayer.Visibility = "Hidden"
-        $MainWindow.Height = 300
+        $MainWindow.Height = 450
         $MainWindow.width = 430
     }
 )
