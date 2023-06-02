@@ -35,7 +35,6 @@
             </ProgressBar>
         </Grid>
         <Grid Name="DarkBgOverlayLayer" Panel.ZIndex="999" Visibility="Collapsed" Background="Black" Opacity="0.5"></Grid>
-        <Grid>
         <materialDesign:Card Name="HsmConfigLayer" Panel.ZIndex="1000" Visibility="Hidden" Height="500" Width="480" Margin="20" HorizontalAlignment="Center" VerticalAlignment="Center">
                 <Grid>
                     <Grid.RowDefinitions>
@@ -146,6 +145,7 @@
                                     </StackPanel>
                     </Grid>
             </materialDesign:Card>
+        <Grid>
         <Border CornerRadius="10" Background="White">
             <TabControl
                 Style="{StaticResource MaterialDesignFilledTabControl}" TabStripPlacement="Left">
