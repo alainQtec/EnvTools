@@ -64,32 +64,19 @@
                                             <RowDefinition Height="Auto" />
                                             <RowDefinition Height="Auto" />
                                             <RowDefinition Height="Auto" />
-                                            <RowDefinition Height="Auto" />
-                                            <RowDefinition Height="Auto" />
-                                            <RowDefinition Height="Auto" />
-                                            <RowDefinition Height="Auto" />
-                                            <RowDefinition Height="Auto" />
-                                            <RowDefinition Height="Auto" />
-                                            <RowDefinition Height="Auto" />
                                         </Grid.RowDefinitions>
                                         
-                                        
-                                        <ComboBox Name="Az_Hsm_Form_ComboBox_Make" Grid.Column="0" Grid.Row="0" SelectedItem="{Binding txt}" Style="{StaticResource MaterialDesignOutlinedComboBox}" 
-                                            materialDesign:HintAssist.Hint="Make" materialDesign:HintAssist.HelperText="* Required Field" Margin="5" />
 
                                         <TextBox Name="Az_Hsm_Form_TextBox_Plate1" Grid.Column="0" Grid.Row="6" materialDesign:HintAssist.Hint="License Plate" Text="{Binding txt}"
                                             Validation.ErrorTemplate="{StaticResource MaterialDesignValidationErrorTemplate}" materialDesign:HintAssist.HelperText="Numbers and Dashes" MaxLength="10"
                                             materialDesign:TextFieldAssist.CharacterCounterVisibility="Collapsed" ToolTip="Valid formats: 99-999-99 or 999-99-999"
                                             Style="{StaticResource MaterialDesignOutlinedTextBox}" materialDesign:TextFieldAssist.SuffixText="*" Margin="5" />
-                                        <TextBlock HorizontalAlignment="Left" VerticalAlignment="Center" Text="Strength:" 
-                                            FontSize="16" Grid.Column="3" Grid.Row="1" Grid.ColumnSpan="2" Margin="5" />
+                                        
                                         
                                         <TextBox Name="Az_Hsm_Form_TextBox_Plate2" Grid.Column="0" Grid.Row="6" materialDesign:HintAssist.Hint="License Plate" Text="{Binding txt}"
                                             Validation.ErrorTemplate="{StaticResource MaterialDesignValidationErrorTemplate}" materialDesign:HintAssist.HelperText="Numbers and Dashes" MaxLength="10"
                                             materialDesign:TextFieldAssist.CharacterCounterVisibility="Collapsed" ToolTip="Valid formats: 99-999-99 or 999-99-999"
                                             Style="{StaticResource MaterialDesignOutlinedTextBox}" materialDesign:TextFieldAssist.SuffixText="*" Margin="5" />
-                                        <TextBlock HorizontalAlignment="Left" VerticalAlignment="Center" Text="Strength:" 
-                                            FontSize="16" Grid.Column="3" Grid.Row="2" Grid.ColumnSpan="2" Margin="5" />
 
                                         <TextBox Name="Az_Hsm_Form_TextBox_Note" Grid.Column="0" Grid.Row="8" Grid.ColumnSpan="5" Style="{StaticResource MaterialDesignOutlinedTextBox}" MaxLength="50"
                                             Validation.ErrorTemplate="{StaticResource MaterialDesignValidationErrorTemplate}" materialDesign:HintAssist.Hint="Note" Text="{Binding txt}" 
@@ -99,55 +86,32 @@
                                             Validation.ErrorTemplate="{StaticResource MaterialDesignValidationErrorTemplate}" materialDesign:HintAssist.HelperText="Numbers and Dashes" MaxLength="10"
                                             materialDesign:TextFieldAssist.CharacterCounterVisibility="Collapsed" ToolTip="Valid formats: 99-999-99 or 999-99-999"
                                             Style="{StaticResource MaterialDesignOutlinedTextBox}" materialDesign:TextFieldAssist.SuffixText="*" Margin="5" />
-                                        <TextBlock HorizontalAlignment="Left" VerticalAlignment="Center" Text="Strength:" 
-                                            FontSize="16" Grid.Column="3" Grid.Row="3" Grid.ColumnSpan="2" Margin="5" />
                                         
                                         <TextBox Name="Az_Hsm_Form_TextBox_Plate4" Grid.Column="0" Grid.Row="6" materialDesign:HintAssist.Hint="License Plate" Text="{Binding txt}"
                                             Validation.ErrorTemplate="{StaticResource MaterialDesignValidationErrorTemplate}" materialDesign:HintAssist.HelperText="Numbers and Dashes" MaxLength="10"
                                             materialDesign:TextFieldAssist.CharacterCounterVisibility="Collapsed" ToolTip="Valid formats: 99-999-99 or 999-99-999"
                                             Style="{StaticResource MaterialDesignOutlinedTextBox}" materialDesign:TextFieldAssist.SuffixText="*" Margin="5" />
-                                        <TextBlock HorizontalAlignment="Left" VerticalAlignment="Center" Text="Strength:" 
-                                            FontSize="16" Grid.Column="3" Grid.Row="4" Grid.ColumnSpan="2" Margin="5" />
 
                                         <TextBox Name="Az_Hsm_Form_TextBox_Plate5" Grid.Column="0" Grid.Row="6" materialDesign:HintAssist.Hint="License Plate" Text="{Binding txt}"
                                             Validation.ErrorTemplate="{StaticResource MaterialDesignValidationErrorTemplate}" materialDesign:HintAssist.HelperText="Numbers and Dashes" MaxLength="10"
                                             materialDesign:TextFieldAssist.CharacterCounterVisibility="Collapsed" ToolTip="Valid formats: 99-999-99 or 999-99-999"
                                             Style="{StaticResource MaterialDesignOutlinedTextBox}" materialDesign:TextFieldAssist.SuffixText="*" Margin="5" />
-                                        <TextBlock HorizontalAlignment="Left" VerticalAlignment="Center" Text="Strength:" 
-                                            FontSize="16" Grid.Column="3" Grid.Row="5" Grid.ColumnSpan="2" Margin="5" />
 
                                         <TextBox Name="Az_Hsm_Form_TextBox_Plate6" Grid.Column="0" Grid.Row="6" materialDesign:HintAssist.Hint="License Plate" Text="{Binding txt}"
                                             Validation.ErrorTemplate="{StaticResource MaterialDesignValidationErrorTemplate}" materialDesign:HintAssist.HelperText="Numbers and Dashes" MaxLength="10"
                                             materialDesign:TextFieldAssist.CharacterCounterVisibility="Collapsed" ToolTip="Valid formats: 99-999-99 or 999-99-999"
                                             Style="{StaticResource MaterialDesignOutlinedTextBox}" materialDesign:TextFieldAssist.SuffixText="*" Margin="5" />
-                                        <TextBlock HorizontalAlignment="Left" VerticalAlignment="Center" Text="Strength:" 
-                                            FontSize="16" Grid.Column="3" Grid.Row="6" Grid.ColumnSpan="2" Margin="5" />
 
                                         <TextBox Name="Az_Hsm_Form_TextBox_Plate7" Grid.Column="0" Grid.Row="6" materialDesign:HintAssist.Hint="License Plate" Text="{Binding txt}"
                                             Validation.ErrorTemplate="{StaticResource MaterialDesignValidationErrorTemplate}" materialDesign:HintAssist.HelperText="Numbers and Dashes" MaxLength="10"
                                             materialDesign:TextFieldAssist.CharacterCounterVisibility="Collapsed" ToolTip="Valid formats: 99-999-99 or 999-99-999"
                                             Style="{StaticResource MaterialDesignOutlinedTextBox}" materialDesign:TextFieldAssist.SuffixText="*" Margin="5" />
-                                        <TextBlock HorizontalAlignment="Left" VerticalAlignment="Center" Text="Strength:" 
-                                            FontSize="16" Grid.Column="3" Grid.Row="7" Grid.ColumnSpan="2" Margin="5" />
-                                        <!-- <ComboBox Name="Az_Hsm_Form_ComboBox_Model" Grid.Column="2" Grid.Row="0" SelectedItem="{Binding txt}" Style="{StaticResource MaterialDesignOutlinedComboBox}" 
-                                            materialDesign:HintAssist.Hint="Model" materialDesign:HintAssist.HelperText="* Required Field" /> -->
-                                        <!-- <ComboBox Name="Az_Hsm_Form_ComboBox_Year" Grid.Column="4" Grid.Row="0" SelectedItem="{Binding txt}" Style="{StaticResource MaterialDesignOutlinedComboBox}" 
-                                            materialDesign:HintAssist.Hint="Year" materialDesign:HintAssist.HelperText="* Required Field" /> -->
-                                        <!-- <materialDesign:RatingBar Name="Az_Hsm_Form_RatingBar_Rate" Orientation="Horizontal" VerticalAlignment="Center" Foreground="Gold"  Grid.Column="4" Grid.Row="6" 
-                                            Value="{Binding Path=BlaBla, Mode=TwoWay}" Margin="5"/> -->
-                                        <!-- <ComboBox Name="Az_Hsm_Form_ComboBox_Color" Grid.Column="0" Grid.Row="2" Grid.ColumnSpan="3" SelectedItem="{Binding txt}" Style="{StaticResource MaterialDesignOutlinedComboBox}" 
-                                            materialDesign:HintAssist.Hint="Color" materialDesign:HintAssist.HelperText="* Required Field" /> -->
-                                        <!-- <materialDesign:TimePicker Name="Az_Hsm_Form_TimePicker_Registered" Grid.Column="4" Grid.Row="2"  Style="{StaticResource MaterialDesignOutlinedTimePicker}" 
-                                            materialDesign:HintAssist.Hint="Reg.Time" Text="{Binding txt}" Validation.ErrorTemplate="{StaticResource MaterialDesignValidationErrorTemplate}" 
-                                            materialDesign:HintAssist.HelperText="* Required Field" /> -->
-                                        <!-- <DatePicker Name="Az_Hsm_Form_DatePicker_Registered" Grid.Column="4" Grid.Row="4" SelectedDate="{Binding txt}" Style="{StaticResource MaterialDesignOutlinedDatePicker}" 
-                                            Validation.ErrorTemplate="{StaticResource MaterialDesignValidationErrorTemplate}" materialDesign:HintAssist.Hint="Reg.Date" materialDesign:HintAssist.HelperText="* Required Field"/> -->
+                                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Grid.Row="2" Margin="0,20,10,0">
+                                            <Button Name="Az_Hsm_Form_Btn_Reset" Style="{StaticResource MaterialDesignFlatLightBgButton}" Content="Reset" Width="80" Margin="10" />
+                                            <Button Name="Az_Hsm_Form_Btn_Cancel" Style="{StaticResource MaterialDesignFlatLightBgButton}" Content="Cancel" Width="80" Margin="10" />
+                                            <Button Name="Az_Hsm_Form_Btn_Apply" Style="{StaticResource MaterialDesignFlatLightBgButton}" Content="Apply" Width="80" Margin="10" />
+                                        </StackPanel>
                                     </Grid>
-                                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Grid.Row="2" Margin="0,20,10,0">
-                                        <Button Name="Az_Hsm_Form_Btn_Reset" Style="{StaticResource MaterialDesignFlatLightBgButton}" Content="Reset" Width="80" Margin="10" />
-                                        <Button Name="Az_Hsm_Form_Btn_Cancel" Style="{StaticResource MaterialDesignFlatLightBgButton}" Content="Cancel" Width="80" Margin="10" />
-                                        <Button Name="Az_Hsm_Form_Btn_Apply" Style="{StaticResource MaterialDesignFlatLightBgButton}" Content="Apply" Width="80" Margin="10" />
-                                    </StackPanel>
                     </Grid>
             </materialDesign:Card>
         <Grid>
