@@ -53,9 +53,7 @@
                                             </ControlTemplate>
                                         </Button.Template>
                                     </Button>
-                                    <ScrollViewer>
-                                    </ScrollViewer>
-                                    <Grid Grid.Row="1" Name="HsmConfigForm" Margin="20" VerticalScrollBarVisibility="Auto">
+                                    <Grid Grid.Row="1" Name="HsmConfigForm" Margin="20">
                                         <Grid.RowDefinitions>
                                             <RowDefinition Height="Auto" />
                                             <RowDefinition Height="Auto" />
