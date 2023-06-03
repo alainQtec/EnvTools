@@ -3,7 +3,7 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
     Name="MainWindow"
-    Title="EnvTools user's Azure Hsm"
+    Title="EnvTools config"
 	Height="450"
 	Width="430"
     Style="{DynamicResource MaterialDesignWindow}" 
@@ -36,12 +36,12 @@
         </Grid>
         <Grid Name="DarkBgOverlayLayer" Panel.ZIndex="999" Visibility="Collapsed" Background="Black" Opacity="0.5"></Grid>
         <materialDesign:Card Name="HsmConfigLayer" Panel.ZIndex="1000" Visibility="Hidden" Height="500" Width="480" Margin="20" HorizontalAlignment="Center" VerticalAlignment="Center">
-                <Grid>
-                    <Grid.RowDefinitions>
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
                         <RowDefinition Height="Auto" />
                             <RowDefinition Height="Auto" />
-                                <RowDefinition Height="Auto" />
-                                    </Grid.RowDefinitions>
+                                </Grid.RowDefinitions>
                                     <TextBlock Text="Azure Hsm vault Config" Grid.Row="0" Padding="20" FontWeight="Bold" Style="{StaticResource MaterialDesignHeadline5TextBlock}"/>
                                     <Button Name="Btn_HsmConfigLayer_Close" Width="25" Height="25" Content="x" Grid.Row="0" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,10,0" ToolTip="Close">
                                         <Button.Template>
@@ -102,33 +102,59 @@
                 <Grid>
                     <Border CornerRadius="10" Background="White">
                         <TabControl Style="{StaticResource MaterialDesignFilledTabControl}" TabStripPlacement="Left">
-                            <TabItem Header="Hsm CONFIG">
-                            <materialDesign:Card>
-                            <Grid>
-                                <Label Content="EnvTools Azure Hsm CONFIG" FontWeight="Bold" HorizontalAlignment="Center" Margin="5"/>
+                        <TabItem Header="Hsm CONFIG">
+                            <Grid  Margin="10">
+                                <Label Content="Azure Hsm CONFIG" FontWeight="Bold" HorizontalAlignment="Center" Margin="5"/>
                                 <StackPanel  VerticalAlignment="Center">
                                     <Button Name="Btn_Popup_AZ_Inputs" Content="Add your Hsm cfg" Width="150" ToolTip="Input your azure Configs" Margin="5"/>
                                     <Button Name="Btn_StartConfigJobs" Content="Start AZ config" Width="150" ToolTip="Start Azure Config" Margin="5"/>
                                 </StackPanel>
                             </Grid>
-                            </materialDesign:Card>
-                            </TabItem>
+                        </TabItem>
 
-                            <TabItem Header="User details">
-                            <TextBlock Margin="8" Text="Left placement2" />
-                            </TabItem>
+                        <TabItem Header="User details">
+                            <Grid  Margin="10">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                </Grid.RowDefinitions>
+                                <Label Content="Set your user details"  Grid.Row="0" FontWeight="Bold" HorizontalAlignment="Center" Margin="5"/>
+                                <TextBlock Margin="8" Grid.Row="1" Text="Enter your user details" />
+                            </Grid>
+                        </TabItem>
 
-                            <TabItem Header="Git config">
-                            <TextBlock Margin="8" Text="Tab 3 with different width" />
-                            </TabItem>
+                        <TabItem Header="Git config">
+                            <Grid  Margin="10">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                </Grid.RowDefinitions>
+                                <Label Content="Set Git configs"  Grid.Row="0" FontWeight="Bold" HorizontalAlignment="Center" Margin="5"/>
+                                <TextBlock Margin="8" Grid.Row="1" Text="Configure your git repo" />
+                            </Grid>
+                        </TabItem>
 
-                            <TabItem Header="TAB 4 Looong">
-                            <TextBlock Margin="8" Text="Tab 4 with long width" />
-                            </TabItem>
-                            
-                            <TabItem Header="TABB 5">
-                            <TextBlock Margin="8" Text="Left placement tabb 5" />
-                            </TabItem>
+                        <TabItem Header="TAB 4 Looong">
+                            <Grid  Margin="10">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                </Grid.RowDefinitions>
+                                <Label Content="Tab 4" Grid.Row="0" FontWeight="Bold" HorizontalAlignment="Center" Margin="5"/>
+                                <TextBlock Margin="8" Grid.Row="1" Text="Tab 4 with long width" />
+                            </Grid>
+                        </TabItem>
+    
+                        <TabItem Header="TABB 5">
+                            <Grid  Margin="10">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                </Grid.RowDefinitions>
+                                <Label Content="TAB 5" Grid.Row="0" FontWeight="Bold" HorizontalAlignment="Center" Margin="5"/>
+                                <TextBlock Margin="8" Grid.Row="1" Text="Left placement tabb 5" />
+                            </Grid>
+                        </TabItem>
                     </TabControl>
                 </Border>
         </Grid>
