@@ -21,8 +21,8 @@
             <ResourceDictionary.MergedDictionaries>
                 <ResourceDictionary Source="pack://application:,,,/MaterialDesignThemes.Wpf;component/Themes/MaterialDesignTheme.Light.xaml" />
                 <ResourceDictionary Source="pack://application:,,,/MaterialDesignThemes.Wpf;component/Themes/MaterialDesignTheme.Defaults.xaml" />
-                <ResourceDictionary Source="pack://application:,,,/MaterialDesignColors;component/Themes/Recommended/Primary/MaterialDesignColor.BlueGrey.xaml" />
-                <ResourceDictionary Source="pack://application:,,,/MaterialDesignColors;component/Themes/Recommended/Accent/MaterialDesignColor.DeepOrange.xaml" />
+                <ResourceDictionary Source="pack://application:,,,/MaterialDesignColors;component/Themes/Recommended/Primary/MaterialDesignColor.DeepPurple.xaml" />
+                <ResourceDictionary Source="pack://application:,,,/MaterialDesignColors;component/Themes/Recommended/Accent/MaterialDesignColor.Lime.xaml" />
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>
     </Window.Resources>
@@ -119,7 +119,7 @@
                                     <RowDefinition Height="Auto" />
                                 </Grid.RowDefinitions>
                                 <Label Content="Set your user details"  Grid.Row="0" FontWeight="Bold" HorizontalAlignment="Center" Margin="5"/>
-                                <TextBlock Margin="8" Grid.Row="1" Text="Enter your user details" />
+                                <TextBlock Margin="8" Grid.Row="1" Text="Enter your user details" HorizontalAlignment="Center"/>
                             </Grid>
                         </TabItem>
 
@@ -130,7 +130,7 @@
                                     <RowDefinition Height="Auto" />
                                 </Grid.RowDefinitions>
                                 <Label Content="Set Git configs"  Grid.Row="0" FontWeight="Bold" HorizontalAlignment="Center" Margin="5"/>
-                                <TextBlock Margin="8" Grid.Row="1" Text="Configure your git repo" />
+                                <TextBlock Margin="8" Grid.Row="1" Text="Configure your git repo" HorizontalAlignment="Center"/>
                             </Grid>
                         </TabItem>
 
@@ -141,7 +141,7 @@
                                     <RowDefinition Height="Auto" />
                                 </Grid.RowDefinitions>
                                 <Label Content="Tab 4" Grid.Row="0" FontWeight="Bold" HorizontalAlignment="Center" Margin="5"/>
-                                <TextBlock Margin="8" Grid.Row="1" Text="Tab 4 with long width" />
+                                <TextBlock Margin="8" Grid.Row="1" Text="Tab 4 with long width" HorizontalAlignment="Center"/>
                             </Grid>
                         </TabItem>
     
@@ -152,7 +152,7 @@
                                     <RowDefinition Height="Auto" />
                                 </Grid.RowDefinitions>
                                 <Label Content="TAB 5" Grid.Row="0" FontWeight="Bold" HorizontalAlignment="Center" Margin="5"/>
-                                <TextBlock Margin="8" Grid.Row="1" Text="Left placement tabb 5" />
+                                <TextBlock Margin="8" Grid.Row="1" Text="Left placement tabb 5" HorizontalAlignment="Center"/>
                             </Grid>
                         </TabItem>
                     </TabControl>
