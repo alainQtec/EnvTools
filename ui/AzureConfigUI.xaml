@@ -63,98 +63,74 @@
                                             <RowDefinition Height="Auto" />
                                             <RowDefinition Height="Auto" />
                                             <RowDefinition Height="Auto" />
-                                            <RowDefinition Height="Auto" />
                                         </Grid.RowDefinitions>
                                         
 
-                                        <TextBox Name="Az_Hsm_Form_TextBox_Plate1" Grid.Column="0" Grid.Row="6" materialDesign:HintAssist.Hint="License Plate" Text="{Binding txt}"
+                                        <TextBox Name="Az_Hsm_Form_TextBox_Plate1" Grid.Column="0" Grid.Row="2" materialDesign:HintAssist.Hint="License Plate" Text="{Binding txt}"
                                             Validation.ErrorTemplate="{StaticResource MaterialDesignValidationErrorTemplate}" materialDesign:HintAssist.HelperText="Numbers and Dashes" MaxLength="10"
                                             materialDesign:TextFieldAssist.CharacterCounterVisibility="Collapsed" ToolTip="Valid formats: 99-999-99 or 999-99-999"
-                                            Style="{StaticResource MaterialDesignOutlinedTextBox}" materialDesign:TextFieldAssist.SuffixText="*" Margin="5" />
+                                            Style="{StaticResource MaterialDesignOutlinedTextBox}" materialDesign:TextFieldAssist.SuffixText="*" Margin="8" />
+                                         
                                         
-                                        
-                                        <TextBox Name="Az_Hsm_Form_TextBox_Plate2" Grid.Column="0" Grid.Row="6" materialDesign:HintAssist.Hint="License Plate" Text="{Binding txt}"
+                                        <TextBox Name="Az_Hsm_Form_TextBox_Plate2" Grid.Column="0" Grid.Row="3" materialDesign:HintAssist.Hint="License Plate" Text="{Binding txt}"
                                             Validation.ErrorTemplate="{StaticResource MaterialDesignValidationErrorTemplate}" materialDesign:HintAssist.HelperText="Numbers and Dashes" MaxLength="10"
                                             materialDesign:TextFieldAssist.CharacterCounterVisibility="Collapsed" ToolTip="Valid formats: 99-999-99 or 999-99-999"
-                                            Style="{StaticResource MaterialDesignOutlinedTextBox}" materialDesign:TextFieldAssist.SuffixText="*" Margin="5" />
+                                            Style="{StaticResource MaterialDesignOutlinedTextBox}" materialDesign:TextFieldAssist.SuffixText="*" Margin="8" />
 
-                                        <TextBox Name="Az_Hsm_Form_TextBox_Note" Grid.Column="0" Grid.Row="8" Grid.ColumnSpan="5" Style="{StaticResource MaterialDesignOutlinedTextBox}" MaxLength="50"
+                                        <TextBox Name="Az_Hsm_Form_TextBox_Note" Grid.Column="0" Grid.Row="4" Grid.ColumnSpan="5" Style="{StaticResource MaterialDesignOutlinedTextBox}" MaxLength="50"
                                             Validation.ErrorTemplate="{StaticResource MaterialDesignValidationErrorTemplate}" materialDesign:HintAssist.Hint="Note" Text="{Binding txt}" 
-                                            materialDesign:HintAssist.HelperText='Use only letters, numbers, spaces and limited number of special characters' Margin="5" />
+                                            materialDesign:HintAssist.HelperText='Use only letters, numbers, spaces and limited number of special characters' Margin="8" />
                                             
-                                        <TextBox Name="Az_Hsm_Form_TextBox_Plate3" Grid.Column="0" Grid.Row="6" materialDesign:HintAssist.Hint="License Plate" Text="{Binding txt}"
+                                        <TextBox Name="Az_Hsm_Form_TextBox_Plate3" Grid.Column="0" Grid.Row="5" materialDesign:HintAssist.Hint="License Plate" Text="{Binding txt}"
                                             Validation.ErrorTemplate="{StaticResource MaterialDesignValidationErrorTemplate}" materialDesign:HintAssist.HelperText="Numbers and Dashes" MaxLength="10"
                                             materialDesign:TextFieldAssist.CharacterCounterVisibility="Collapsed" ToolTip="Valid formats: 99-999-99 or 999-99-999"
-                                            Style="{StaticResource MaterialDesignOutlinedTextBox}" materialDesign:TextFieldAssist.SuffixText="*" Margin="5" />
+                                            Style="{StaticResource MaterialDesignOutlinedTextBox}" materialDesign:TextFieldAssist.SuffixText="*" Margin="8" />
                                         
                                         <TextBox Name="Az_Hsm_Form_TextBox_Plate4" Grid.Column="0" Grid.Row="6" materialDesign:HintAssist.Hint="License Plate" Text="{Binding txt}"
                                             Validation.ErrorTemplate="{StaticResource MaterialDesignValidationErrorTemplate}" materialDesign:HintAssist.HelperText="Numbers and Dashes" MaxLength="10"
                                             materialDesign:TextFieldAssist.CharacterCounterVisibility="Collapsed" ToolTip="Valid formats: 99-999-99 or 999-99-999"
-                                            Style="{StaticResource MaterialDesignOutlinedTextBox}" materialDesign:TextFieldAssist.SuffixText="*" Margin="5" />
+                                            Style="{StaticResource MaterialDesignOutlinedTextBox}" materialDesign:TextFieldAssist.SuffixText="*" Margin="8" />
 
-                                        <TextBox Name="Az_Hsm_Form_TextBox_Plate5" Grid.Column="0" Grid.Row="6" materialDesign:HintAssist.Hint="License Plate" Text="{Binding txt}"
-                                            Validation.ErrorTemplate="{StaticResource MaterialDesignValidationErrorTemplate}" materialDesign:HintAssist.HelperText="Numbers and Dashes" MaxLength="10"
-                                            materialDesign:TextFieldAssist.CharacterCounterVisibility="Collapsed" ToolTip="Valid formats: 99-999-99 or 999-99-999"
-                                            Style="{StaticResource MaterialDesignOutlinedTextBox}" materialDesign:TextFieldAssist.SuffixText="*" Margin="5" />
-
-                                        <TextBox Name="Az_Hsm_Form_TextBox_Plate6" Grid.Column="0" Grid.Row="6" materialDesign:HintAssist.Hint="License Plate" Text="{Binding txt}"
-                                            Validation.ErrorTemplate="{StaticResource MaterialDesignValidationErrorTemplate}" materialDesign:HintAssist.HelperText="Numbers and Dashes" MaxLength="10"
-                                            materialDesign:TextFieldAssist.CharacterCounterVisibility="Collapsed" ToolTip="Valid formats: 99-999-99 or 999-99-999"
-                                            Style="{StaticResource MaterialDesignOutlinedTextBox}" materialDesign:TextFieldAssist.SuffixText="*" Margin="5" />
-
-                                        <TextBox Name="Az_Hsm_Form_TextBox_Plate7" Grid.Column="0" Grid.Row="6" materialDesign:HintAssist.Hint="License Plate" Text="{Binding txt}"
-                                            Validation.ErrorTemplate="{StaticResource MaterialDesignValidationErrorTemplate}" materialDesign:HintAssist.HelperText="Numbers and Dashes" MaxLength="10"
-                                            materialDesign:TextFieldAssist.CharacterCounterVisibility="Collapsed" ToolTip="Valid formats: 99-999-99 or 999-99-999"
-                                            Style="{StaticResource MaterialDesignOutlinedTextBox}" materialDesign:TextFieldAssist.SuffixText="*" Margin="5" />
-                                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Grid.Row="2" Margin="0,20,10,0">
+                                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Grid.Row="7" Margin="10">
                                             <Button Name="Az_Hsm_Form_Btn_Reset" Style="{StaticResource MaterialDesignFlatLightBgButton}" Content="Reset" Width="80" Margin="10" />
                                             <Button Name="Az_Hsm_Form_Btn_Cancel" Style="{StaticResource MaterialDesignFlatLightBgButton}" Content="Cancel" Width="80" Margin="10" />
                                             <Button Name="Az_Hsm_Form_Btn_Apply" Style="{StaticResource MaterialDesignFlatLightBgButton}" Content="Apply" Width="80" Margin="10" />
                                         </StackPanel>
                                     </Grid>
-                    </Grid>
-            </materialDesign:Card>
-        <Grid>
-        <Border CornerRadius="10" Background="White">
-            <TabControl
-                Style="{StaticResource MaterialDesignFilledTabControl}" TabStripPlacement="Left">
-                    <TabItem Header="TAB 1">
-                    <materialDesign:Card>
-                    <Grid>
-                        <Label Content="EnvTools Azure Hsm CONFIG" FontWeight="Bold" HorizontalAlignment="Center" Margin="5"/>
-                        <StackPanel  VerticalAlignment="Center">
-                            <Button Name="Btn_Popup_AZ_Inputs" Content="Add your Hsm cfg" Width="150" ToolTip="Input your azure Configs" Margin="5"/>
-                            <Button Name="Btn_StartConfigJobs" Content="Start AZ config" Width="150" ToolTip="Start Azure Config" Margin="5"/>
-                        </StackPanel>
-                    </Grid>
+                                </Grid>
                     </materialDesign:Card>
-                    </TabItem>
-                    <TabItem
-                    Header="TAB 2">
-                    <TextBlock
-                        Margin="8"
-                        Text="Left placement2" />
-                    </TabItem>
-                    <TabItem
-                    Header="TAB 3 Diff Width">
-                    <TextBlock
-                        Margin="8"
-                        Text="Tab 3 with different width" />
-                    </TabItem>
-                    <TabItem
-                    Header="TAB 4 Looong">
-                    <TextBlock
-                        Margin="8"
-                        Text="Tab 4 with long width" />
-                    </TabItem>
-                    <TabItem
-                    Header="TABB 5">
-                    <TextBlock
-                        Margin="8"
-                        Text="Left placement tabb 5" />
-                    </TabItem>
-                </TabControl>
-            </Border>
+                <Grid>
+                    <Border CornerRadius="10" Background="White">
+                        <TabControl Style="{StaticResource MaterialDesignFilledTabControl}" TabStripPlacement="Left">
+                            <TabItem Header="Hsm CONFIG">
+                            <materialDesign:Card>
+                            <Grid>
+                                <Label Content="EnvTools Azure Hsm CONFIG" FontWeight="Bold" HorizontalAlignment="Center" Margin="5"/>
+                                <StackPanel  VerticalAlignment="Center">
+                                    <Button Name="Btn_Popup_AZ_Inputs" Content="Add your Hsm cfg" Width="150" ToolTip="Input your azure Configs" Margin="5"/>
+                                    <Button Name="Btn_StartConfigJobs" Content="Start AZ config" Width="150" ToolTip="Start Azure Config" Margin="5"/>
+                                </StackPanel>
+                            </Grid>
+                            </materialDesign:Card>
+                            </TabItem>
+
+                            <TabItem Header="User details">
+                            <TextBlock Margin="8" Text="Left placement2" />
+                            </TabItem>
+
+                            <TabItem Header="Git config">
+                            <TextBlock Margin="8" Text="Tab 3 with different width" />
+                            </TabItem>
+
+                            <TabItem Header="TAB 4 Looong">
+                            <TextBlock Margin="8" Text="Tab 4 with long width" />
+                            </TabItem>
+                            
+                            <TabItem Header="TABB 5">
+                            <TextBlock Margin="8" Text="Left placement tabb 5" />
+                            </TabItem>
+                    </TabControl>
+                </Border>
         </Grid>
         <Grid>
             <TextBox Name="TextBox_Output" Foreground="white" Background="Black" Style="{StaticResource MaterialDesignOutlinedTextBox}" VerticalAlignment="Bottom" Height="100" Width="400" AcceptsReturn="True" VerticalScrollBarVisibility="Auto" Margin="5"/>
