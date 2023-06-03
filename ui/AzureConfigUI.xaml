@@ -66,13 +66,13 @@
                                         </Grid.RowDefinitions>
                                         
 
-                                        <TextBox Name="Az_Hsm_Form_TextBox_Plate1" Grid.Column="0" Grid.Row="2" materialDesign:HintAssist.Hint="License Plate" Text="{Binding txt}"
+                                        <TextBox Name="Az_Hsm_Form_TextBox_Plate1" Grid.Column="0" Grid.Row="2" materialDesign:HintAssist.Hint="Azure ServicePrincipal AppName" Text="{Binding txt}"
                                             Validation.ErrorTemplate="{StaticResource MaterialDesignValidationErrorTemplate}" materialDesign:HintAssist.HelperText="Numbers and Dashes" MaxLength="10"
                                             materialDesign:TextFieldAssist.CharacterCounterVisibility="Collapsed" ToolTip="Valid formats: 99-999-99 or 999-99-999"
                                             Style="{StaticResource MaterialDesignOutlinedTextBox}" materialDesign:TextFieldAssist.SuffixText="*" Margin="8" />
                                          
                                         
-                                        <TextBox Name="Az_Hsm_Form_TextBox_Plate2" Grid.Column="0" Grid.Row="3" materialDesign:HintAssist.Hint="License Plate" Text="{Binding txt}"
+                                        <TextBox Name="Az_Hsm_Form_TextBox_Plate2" Grid.Column="0" Grid.Row="3" materialDesign:HintAssist.Hint="Azure Subscription Name" Text="{Binding txt}"
                                             Validation.ErrorTemplate="{StaticResource MaterialDesignValidationErrorTemplate}" materialDesign:HintAssist.HelperText="Numbers and Dashes" MaxLength="10"
                                             materialDesign:TextFieldAssist.CharacterCounterVisibility="Collapsed" ToolTip="Valid formats: 99-999-99 or 999-99-999"
                                             Style="{StaticResource MaterialDesignOutlinedTextBox}" materialDesign:TextFieldAssist.SuffixText="*" Margin="8" />
@@ -81,12 +81,12 @@
                                             Validation.ErrorTemplate="{StaticResource MaterialDesignValidationErrorTemplate}" materialDesign:HintAssist.Hint="Note" Text="{Binding txt}" 
                                             materialDesign:HintAssist.HelperText='Use only letters, numbers, spaces and limited number of special characters' Margin="8" />
                                             
-                                        <TextBox Name="Az_Hsm_Form_TextBox_Plate3" Grid.Column="0" Grid.Row="5" materialDesign:HintAssist.Hint="License Plate" Text="{Binding txt}"
+                                        <TextBox Name="Az_Hsm_Form_TextBox_Plate3" Grid.Column="0" Grid.Row="5" materialDesign:HintAssist.Hint="Azure Subscription ID" Text="{Binding txt}"
                                             Validation.ErrorTemplate="{StaticResource MaterialDesignValidationErrorTemplate}" materialDesign:HintAssist.HelperText="Numbers and Dashes" MaxLength="10"
                                             materialDesign:TextFieldAssist.CharacterCounterVisibility="Collapsed" ToolTip="Valid formats: 99-999-99 or 999-99-999"
                                             Style="{StaticResource MaterialDesignOutlinedTextBox}" materialDesign:TextFieldAssist.SuffixText="*" Margin="8" />
                                         
-                                        <TextBox Name="Az_Hsm_Form_TextBox_Plate4" Grid.Column="0" Grid.Row="6" materialDesign:HintAssist.Hint="License Plate" Text="{Binding txt}"
+                                        <TextBox Name="Az_Hsm_Form_TextBox_Plate4" Grid.Column="0" Grid.Row="6" materialDesign:HintAssist.Hint="Azure Resource Group" Text="{Binding txt}"
                                             Validation.ErrorTemplate="{StaticResource MaterialDesignValidationErrorTemplate}" materialDesign:HintAssist.HelperText="Numbers and Dashes" MaxLength="10"
                                             materialDesign:TextFieldAssist.CharacterCounterVisibility="Collapsed" ToolTip="Valid formats: 99-999-99 or 999-99-999"
                                             Style="{StaticResource MaterialDesignOutlinedTextBox}" materialDesign:TextFieldAssist.SuffixText="*" Margin="8" />
@@ -96,8 +96,8 @@
                                             <Button Name="Az_Hsm_Form_Btn_Cancel" Style="{StaticResource MaterialDesignFlatLightBgButton}" Content="Cancel" Width="80" Margin="10" />
                                             <Button Name="Az_Hsm_Form_Btn_Apply" Style="{StaticResource MaterialDesignFlatLightBgButton}" Content="Apply" Width="80" Margin="10" />
                                         </StackPanel>
-                                    </Grid>
                                 </Grid>
+                            </Grid>
                     </materialDesign:Card>
                 <Grid>
                     <Border CornerRadius="10" Background="White">
