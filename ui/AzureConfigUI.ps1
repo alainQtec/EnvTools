@@ -22,7 +22,7 @@ function New-Window {
     )
 
     try {
-        [xml]$Xaml = (Get-content $XamlFile)
+        [xml]$Xaml = (Get-Content $XamlFile)
         $Reader = New-Object System.Xml.XmlNodeReader $Xaml
         $Window = [Windows.Markup.XamlReader]::Load($Reader)
 
@@ -34,8 +34,7 @@ function New-Window {
         }
 
         return $Window
-    }
-    catch {
+    } catch {
         Write-Error "Error building Xaml data or loading window data.`n$_"
         exit
     }
@@ -51,13 +50,11 @@ function New-Snackbar {
     try {
         if ($ButtonCaption) {
             $MessageQueue.Enqueue($Text, $ButtonCaption, { $null }, $null, $false, $false, [TimeSpan]::FromHours( 9999 ))
-        }
-        else {
+        } else {
             $MessageQueue.Enqueue($Text, $null, $null, $null, $false, $false, $null)
         }
         $Snackbar.MessageQueue = $MessageQueue
-    }
-    catch {
+    } catch {
         Write-Error "No MessageQueue was declared in the window. Make sure -NoSnackbar switch wasn't used in New-Window`n$_"
     }
 }
@@ -93,8 +90,7 @@ function Get-SaveFilePath {
         $SaveFileDialog.OverwritePrompt = $True;
         $SaveFileDialog.ShowDialog() | Out-Null
         return $SaveFileDialog.filename
-    }
-    catch {
+    } catch {
         Write-Error "Error in Get-SaveFilePath common function`n$_"
     }
 }
@@ -112,8 +108,7 @@ function Get-OpenFilePath {
         # Examples of other common filters: "Word Documents|*.doc|Excel Worksheets|*.xls|PowerPoint Presentations|*.ppt |Office Files|*.doc;*.xls;*.ppt |All Files|*.*"
         $OpenFileDialog.ShowDialog() | Out-Null
         return $OpenFileDialog.filename
-    }
-    catch {
+    } catch {
         Write-Error "Error in Get-OpenFilePath common function`n$_"
     }
 }
@@ -126,7 +121,7 @@ function Open-File {
     )
     try {
         if (!(Test-Path $Path)) {
-            Write-error "File $Path not found"
+            Write-Error "File $Path not found"
             return
         }
         switch ($FileType) {
@@ -141,9 +136,8 @@ function Open-File {
             }
         }
         return $OutputFile
-    }
-    catch {
-        Write-error "Error in Open-File common function`n$_"
+    } catch {
+        Write-Error "Error in Open-File common function`n$_"
     }
 }
 
@@ -189,8 +183,7 @@ function Set-OutlinedProperty {
             $UIObject.VerticalContentAlignment = "Center"
 
         }
-    }
-    catch {
+    } catch {
         Write-Error "Error in Set-OutlinedProperty common function`n$_"
     }
 }
@@ -230,12 +223,10 @@ function Set-ValidationError {
     #>
     if ($CheckHasError) {
         return [System.Windows.Controls.Validation]::GetHasError($UIObject)
-    }
-    else {
+    } else {
         if ($ClearInvalid) {
             [System.Windows.Controls.Validation]::ClearInvalid($bindingExpressionBase)
-        }
-        else {
+        } else {
             $validationError.ErrorContent = $ErrorText
             [System.Windows.Controls.Validation]::MarkInvalid($bindingExpressionBase, $validationError)
         }
@@ -250,8 +241,7 @@ function Confirm-RequiredField {
     )
     if (!$UI_Object.Text) {
         Set-ValidationError -UIObject $UI_Object -ErrorText $ErrorText
-    }
-    else {
+    } else {
         Set-ValidationError -UIObject $UI_Object -ClearInvalid
     }
 }
@@ -272,8 +262,7 @@ function Confirm-TextPatternField {
     }
     if ($IsValid) {
         Set-ValidationError -UIObject $UI_Object -ClearInvalid
-    }
-    else {
+    } else {
         Set-ValidationError -UIObject $UI_Object -ErrorText $ErrorText
     }
 }
@@ -292,8 +281,7 @@ function  Confirm-TextInput {
     $UI_Object.text = if ($ToUpper) { (-join $Output).ToUpper() } else { (-join $Output) }
     if ( ($UI_Object.text).length -lt $TextLength ) {
         $UI_Object.SelectionStart = $SelectionStart - 1
-    }
-    else { $UI_Object.SelectionStart = $SelectionStart }
+    } else { $UI_Object.SelectionStart = $SelectionStart }
 }
 
 #endregion Common
@@ -430,24 +418,29 @@ $Btn_HsmConfigLayer_Close.Add_Click({
         )
         $DarkBgOverlayLayer.Visibility = "Hidden"
         $HsmConfigLayer.Visibility = "Hidden"
-        $MainWindow.Height = 450
+        $MainWindow.Height = 480
         $MainWindow.width = 450
     }
 )
 
 $Window.ShowDialog() | Out-Null
 
-
-# - AzureServicePrincipalAppName = # default is "Envtools"
-# - AzureSubscriptionName        = # tooltip should be Create your Az Subscription : 'https://portal.azure.com/#view/Microsoft_Azure_SubscriptionManagement/SubscriptionCreateBlade' # AZURE SUBSCRIPTION NAME FORMAT: <Company>-<Department>-sub-<Environment>
+# user
 # - AzureSubscriptionID          = # tooltip should be GET One: 'https://learn.microsoft.com/en-us/azure/azure-portal/get-subscription-tenant-id'
+# - AzureSubscriptionName        = # tooltip should be Create your Az Subscription : 'https://portal.azure.com/#view/Microsoft_Azure_SubscriptionManagement/SubscriptionCreateBlade' # AZURE SUBSCRIPTION NAME FORMAT: <Company>-<Department>-sub-<Environment>
 # - AzureResourceGroup           = # Name Your ResGroup
-# - AzureVaultName               = # Name the vault to use
 # - AzureTenantID                = # tooltip should be : GET One: 'https://learn.microsoft.com/en-us/azure/azure-portal/get-subscription-tenant-id'
+# - Email                        = # user's azure Email
+
+
+# hsm:
+# - AzureServicePrincipalAppName = # default is "Envtools"
+# - AzureVaultName               = # Name the vault to use
 # - CertName                     = # tooltip should be : example "Envtools-cert"
 # - hsmName                      = # example "Envtools-Hsm"
 # - keyName                      = # example "Envtools-Key"
-# - Email                        = # user's azure Email
+
+
 <#
 Can you edit the xaml form to have these inputs above the startConfigJobs Button?
 
