@@ -81,7 +81,6 @@
                         <RowDefinition Height="Auto" />
                     </Grid.RowDefinitions>
 
-
                     <TextBox Name="Az_Hsm_Form_TextBox_Plate1" Grid.Column="0" Grid.Row="2"
                         materialDesign:HintAssist.Hint="Azure ServicePrincipal AppName"
                         Text="{Binding txt}"
@@ -91,7 +90,6 @@
                         ToolTip="Valid formats: 99-999-99 or 999-99-999"
                         Style="{StaticResource MaterialDesignOutlinedTextBox}"
                         materialDesign:TextFieldAssist.SuffixText="*" Margin="8" />
-
 
                     <TextBox Name="Az_Hsm_Form_TextBox_Plate2" Grid.Column="0" Grid.Row="3"
                         materialDesign:HintAssist.Hint="Azure Subscription Name"
@@ -148,7 +146,7 @@
             <Border CornerRadius="10" Background="White">
                 <TabControl Style="{StaticResource MaterialDesignFilledTabControl}"
                     TabStripPlacement="Left">
-                    <TabItem Header="Azure Hsm">
+                    <TabItem Header="1. Azure Hsm">
                         <Grid Margin="10">
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="Auto" />
@@ -156,6 +154,7 @@
                                 <RowDefinition Height="Auto" />
                                 <RowDefinition Height="Auto" />
                             </Grid.RowDefinitions>
+
                             <Label Content="Azure Hsm CONFIG" Grid.Row="0" FontWeight="Bold"
                                 HorizontalAlignment="Center" Margin="6" />
                             <Label Content=" " Grid.Row="1" Margin="6" Visibility="hidden" />
@@ -167,55 +166,80 @@
                         </Grid>
                     </TabItem>
 
-                    <TabItem Header="Azure User">
+                    <TabItem Header="2. Azure User">
                         <Grid Margin="10">
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="Auto" />
                                 <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
                             </Grid.RowDefinitions>
+
                             <Label Content="Azure user details" Grid.Row="0" FontWeight="Bold"
                                 HorizontalAlignment="Center" Margin="5" />
                             <TextBlock Margin="8" Grid.Row="1" Text="Enter your user details"
                                 HorizontalAlignment="Center" />
+                            <Label Content=" " Grid.Row="2" Margin="6" Visibility="hidden" />
+                            <Button Name="Btn_Popup_AZ_user_Inputs" Grid.Row="3"
+                                HorizontalAlignment="Center" Content="Input your Azure user details"
+                                Width="270" ToolTip="Input your azure user Configs" Margin="10,5" />
                         </Grid>
                     </TabItem>
 
-                    <TabItem Header="Git Repo">
+                    <TabItem Header="3. Git Repo">
                         <Grid Margin="10">
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="Auto" />
                                 <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
                             </Grid.RowDefinitions>
+
                             <Label Content="Git repo config" Grid.Row="0" FontWeight="Bold"
                                 HorizontalAlignment="Center" Margin="5" />
                             <TextBlock Margin="8" Grid.Row="1" Text="Configure your git repo"
                                 HorizontalAlignment="Center" />
+                            <Label Content=" " Grid.Row="2" Margin="6" Visibility="hidden" />
+                            <Button Name="Btn_Popup_git_repo_config" Grid.Row="3"
+                                HorizontalAlignment="Center" Content="Configure your git repo"
+                                Width="270" ToolTip="Input your github repo Configs" Margin="10,5" />
                         </Grid>
                     </TabItem>
 
-                    <TabItem Header="TAB 4 Looong">
+                    <TabItem Header="4. Run Loops">
                         <Grid Margin="10">
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="Auto" />
                                 <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
                             </Grid.RowDefinitions>
+
                             <Label Content="Tab 4" Grid.Row="0" FontWeight="Bold"
                                 HorizontalAlignment="Center" Margin="5" />
                             <TextBlock Margin="8" Grid.Row="1" Text="Tab 4 with long width"
                                 HorizontalAlignment="Center" />
+                            <Label Content=" " Grid.Row="2" Margin="6" Visibility="hidden" />
+                            <Button Name="Btn_Popup_tab4_config" Grid.Row="3"
+                                HorizontalAlignment="Center" Content="Tab 4 with inputs"
+                                Width="270" ToolTip="Input Tab for 4" Margin="10,5" />
                         </Grid>
                     </TabItem>
 
-                    <TabItem Header="TABB 5">
+                    <TabItem Header="5. Run dstss">
                         <Grid Margin="10">
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="Auto" />
                                 <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
                             </Grid.RowDefinitions>
-                            <Label Content="TAB 5" Grid.Row="0" FontWeight="Bold"
+
+                            <Label Content="Settings" Grid.Row="0" FontWeight="Bold"
                                 HorizontalAlignment="Center" Margin="5" />
-                            <TextBlock Margin="8" Grid.Row="1" Text="Left placement tabb 5"
+                            <TextBlock Margin="8" Grid.Row="1" Text="Setting toggles will go here"
                                 HorizontalAlignment="Center" />
+                            <Label Content=" " Grid.Row="2" Margin="6" Visibility="hidden" />
                         </Grid>
                     </TabItem>
                 </TabControl>
@@ -223,8 +247,8 @@
         </Grid>
         <Grid>
             <StackPanel VerticalAlignment="Bottom">
-                <Button Name="Btn_StartConfigJobs" Content="Start AZ config"
-                    Width="150" ToolTip="Start Azure Config" Margin="5" />
+                <Button Name="Btn_StartConfigJobs" Content="Run all configs"
+                    Width="150" ToolTip="Runs all required module Configs" Margin="5" />
                 <TextBox Name="TextBox_Output" Foreground="white" Background="Black"
                     Style="{StaticResource MaterialDesignOutlinedTextBox}"
                     VerticalAlignment="Bottom"
