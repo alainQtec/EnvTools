@@ -3,7 +3,7 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
     Name="MainWindow"
-    Title="EnvTools config"
+    Title="EnvTools v1.0.1"
     Height="480"
     Width="450"
     Style="{DynamicResource MaterialDesignWindow}"
@@ -143,171 +143,233 @@
             </Grid>
         </materialDesign:Card>
         <Grid>
-            <Border CornerRadius="10" Background="White">
-                <TabControl Style="{StaticResource MaterialDesignFilledTabControl}"
-                    TabStripPlacement="Left">
-                    <TabItem Header="1. Azure Hsm">
-                        <materialDesign:Card>
-                            <Grid Margin="10">
-                                <Grid.RowDefinitions>
-                                    <RowDefinition Height="Auto" />
-                                    <RowDefinition Height="Auto" />
-                                    <RowDefinition Height="Auto" />
-                                    <RowDefinition Height="Auto" />
-                                </Grid.RowDefinitions>
+            <TabControl Style="{StaticResource MaterialDesignFilledTabControl}"
+                TabStripPlacement="Left">
+                <TabItem>
+                    <TabItem.Header>
+                        <StackPanel
+                            Width="auto"
+                            Height="auto">
+                            <materialDesign:PackIcon
+                                Width="24"
+                                Height="24"
+                                HorizontalAlignment="Center"
+                                Kind="MicrosoftAzure" />
+                            <TextBlock
+                                HorizontalAlignment="Center"
+                                Text="Azure Hsm" />
+                        </StackPanel>
+                    </TabItem.Header>
+                    <materialDesign:Card>
+                        <Grid Margin="10">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                            </Grid.RowDefinitions>
+                            <Label Content="Azure Hsm CONFIG" Grid.Row="0" FontWeight="Bold"
+                                HorizontalAlignment="Center" Margin="6" />
+                            <Label Content=" " Grid.Row="1" Margin="6" Visibility="hidden" />
+                            <Button Name="Btn_Popup_AZ_Inputs" Grid.Row="2"
+                                VerticalAlignment="center"
+                                Content="Set ur Hsm Config"
+                                Width="270" ToolTip="Input your azure Configs" Margin="10,5"
+                                HorizontalAlignment="Center"
+                                Style="{StaticResource MaterialDesignOutlinedDarkButton}"
+                            />
+                        </Grid>
+                    </materialDesign:Card>
+                </TabItem>
 
-                                <Label Content="Azure Hsm CONFIG" Grid.Row="0" FontWeight="Bold"
-                                    HorizontalAlignment="Center" Margin="6" />
-                                <Label Content=" " Grid.Row="1" Margin="6" Visibility="hidden" />
-                                <Label Content=" " Grid.Row="2" Margin="6" Visibility="hidden" />
-                                <Button Name="Btn_Popup_AZ_Inputs" Grid.Row="3"
-                                    HorizontalAlignment="Center"
-                                    Content="Set your Azure Hsm Config"
-                                    Width="270" ToolTip="Input your azure Configs" Margin="10,5"
-                                    IsEnabled="{Binding DataContext.ControlsEnabled, RelativeSource={RelativeSource FindAncestor, AncestorType=Window}}"
-                                    Style="{StaticResource MaterialDesignOutlinedDarkButton}"
-                                />
-                            </Grid>
-                        </materialDesign:Card>
-                    </TabItem>
+                <TabItem>
+                    <TabItem.Header>
+                        <StackPanel
+                            Width="auto"
+                            Height="auto">
+                            <materialDesign:PackIcon
+                                Width="24"
+                                Height="24"
+                                HorizontalAlignment="Center"
+                                Kind="AccountTie" />
+                            <TextBlock
+                                HorizontalAlignment="Center"
+                                Text="Azure User" />
+                        </StackPanel>
+                    </TabItem.Header>
+                    <materialDesign:Card>
+                        <Grid Margin="10">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                            </Grid.RowDefinitions>
 
-                    <TabItem Header="2. Azure User">
-                        <materialDesign:Card>
-                            <Grid Margin="10">
-                                <Grid.RowDefinitions>
-                                    <RowDefinition Height="Auto" />
-                                    <RowDefinition Height="Auto" />
-                                    <RowDefinition Height="Auto" />
-                                    <RowDefinition Height="Auto" />
-                                </Grid.RowDefinitions>
+                            <Label Content="Azure user details" Grid.Row="0" FontWeight="Bold"
+                                HorizontalAlignment="Center" Margin="5" />
+                            <TextBlock Margin="8" Grid.Row="1" Text="Enter your user details"
+                                HorizontalAlignment="Center" />
+                            <Label Content=" " Grid.Row="2" Margin="6" Visibility="hidden" />
+                            <Button Name="Btn_Popup_AZ_user_Inputs" Grid.Row="3"
+                                Content="Input your Azure user details"
+                                Width="270" ToolTip="Input your azure user Configs"
+                                Margin="10,5" HorizontalAlignment="Center"
+                                Style="{StaticResource MaterialDesignOutlinedDarkButton}"
+                            />
+                        </Grid>
+                    </materialDesign:Card>
+                </TabItem>
 
-                                <Label Content="Azure user details" Grid.Row="0" FontWeight="Bold"
-                                    HorizontalAlignment="Center" Margin="5" />
-                                <TextBlock Margin="8" Grid.Row="1" Text="Enter your user details"
-                                    HorizontalAlignment="Center" />
-                                <Label Content=" " Grid.Row="2" Margin="6" Visibility="hidden" />
-                                <Button Name="Btn_Popup_AZ_user_Inputs" Grid.Row="3"
-                                    Content="Input your Azure user details"
-                                    Width="270" ToolTip="Input your azure user Configs"
-                                    Margin="10,5" HorizontalAlignment="Center"
-                                    IsEnabled="{Binding DataContext.ControlsEnabled, RelativeSource={RelativeSource FindAncestor, AncestorType=Window}}"
-                                    Style="{StaticResource MaterialDesignOutlinedDarkButton}"
-                                />
-                            </Grid>
-                        </materialDesign:Card>
-                    </TabItem>
+                <TabItem>
+                    <TabItem.Header>
+                        <StackPanel
+                            Width="auto"
+                            Height="auto">
+                            <materialDesign:PackIcon
+                                Width="24"
+                                Height="24"
+                                HorizontalAlignment="Center"
+                                Kind="Git" />
+                            <TextBlock
+                                HorizontalAlignment="Center"
+                                Text="Git Repo" />
+                        </StackPanel>
+                    </TabItem.Header>
+                    <materialDesign:Card>
+                        <Grid Margin="10">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                            </Grid.RowDefinitions>
 
-                    <TabItem Header="3. Git Repo">
-                        <materialDesign:Card>
-                            <Grid Margin="10">
-                                <Grid.RowDefinitions>
-                                    <RowDefinition Height="Auto" />
-                                    <RowDefinition Height="Auto" />
-                                    <RowDefinition Height="Auto" />
-                                    <RowDefinition Height="Auto" />
-                                </Grid.RowDefinitions>
+                            <Label Content="GitHub repo config" Grid.Row="0" FontWeight="Bold"
+                                HorizontalAlignment="Center" Margin="5" />
+                            <TextBlock Margin="8" Grid.Row="1" Text="Configure your git repo"
+                                HorizontalAlignment="Center" />
+                            <Label Content=" " Grid.Row="2" Margin="6" Visibility="hidden" />
+                            <Button
+                                Name="Btn_Popup_git_repo_config" Grid.Row="3" Width="270"
+                                Content="Configure your git repo"
+                                HorizontalAlignment="Center"
+                                ToolTip="Input your github repo Configs" Margin="10,5"
+                                Style="{StaticResource MaterialDesignOutlinedDarkButton}"
+                            />
+                        </Grid>
+                    </materialDesign:Card>
+                </TabItem>
 
-                                <Label Content="Git repo config" Grid.Row="0" FontWeight="Bold"
-                                    HorizontalAlignment="Center" Margin="5" />
-                                <TextBlock Margin="8" Grid.Row="1" Text="Configure your git repo"
-                                    HorizontalAlignment="Center" />
-                                <Label Content=" " Grid.Row="2" Margin="6" Visibility="hidden" />
-                                <Button
-                                    Name="Btn_Popup_git_repo_config" Grid.Row="3" Width="270"
-                                    Content="Configure your git repo"
-                                    IsEnabled="{Binding DataContext.ControlsEnabled, RelativeSource={RelativeSource FindAncestor, AncestorType=Window}}"
-                                    HorizontalAlignment="Center"
-                                    ToolTip="Input your github repo Configs" Margin="10,5"
-                                    Style="{StaticResource MaterialDesignOutlinedDarkButton}"
-                                />
-                            </Grid>
-                        </materialDesign:Card>
-                    </TabItem>
+                <TabItem>
+                    <TabItem.Header>
+                        <StackPanel
+                            Width="auto"
+                            Height="auto">
+                            <materialDesign:PackIcon
+                                Width="24"
+                                Height="24"
+                                HorizontalAlignment="Center"
+                                Kind="Certificate" />
+                            <TextBlock
+                                HorizontalAlignment="Center"
+                                Text="Certs" />
+                        </StackPanel>
+                    </TabItem.Header>
+                    <materialDesign:Card>
+                        <Grid Margin="10">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                            </Grid.RowDefinitions>
 
-                    <TabItem Header="4. Certs  ">
-                        <materialDesign:Card>
-                            <Grid Margin="10">
-                                <Grid.RowDefinitions>
-                                    <RowDefinition Height="Auto" />
-                                    <RowDefinition Height="Auto" />
-                                    <RowDefinition Height="Auto" />
-                                    <RowDefinition Height="Auto" />
-                                </Grid.RowDefinitions>
+                            <Label Content="Tab 4" Grid.Row="0" FontWeight="Bold"
+                                HorizontalAlignment="Center" Margin="5" />
+                            <TextBlock Margin="8" Grid.Row="1" Text="Tab 4 with long width"
+                                HorizontalAlignment="Center" />
+                            <Label Content=" " Grid.Row="2" Margin="6" Visibility="hidden" />
+                            <Button
+                                Name="Btn_Popup_tab4_config" Grid.Row="3"
+                                HorizontalAlignment="Center" Content="Tab 4 with inputs"
+                                Width="270" ToolTip="Input Tab for 4" Margin="10,5"
+                                Style="{StaticResource MaterialDesignOutlinedDarkButton}"
+                            />
+                            <DatePicker
+                                Name="DatePicker_certexpiration"
+                                materialDesign:HintAssist.Hint="Pick expiration date"
+                                materialDesign:HintAssist.FloatingOffset="0,-22"
+                                materialDesign:HintAssist.HelperText="Cert expiration date"
+                                Width="140"
+                                Visibility="hidden"
+                                Style="{StaticResource MaterialDesignOutlinedDatePicker}" />
+                        </Grid>
+                    </materialDesign:Card>
+                </TabItem>
 
-                                <Label Content="Tab 4" Grid.Row="0" FontWeight="Bold"
-                                    HorizontalAlignment="Center" Margin="5" />
-                                <TextBlock Margin="8" Grid.Row="1" Text="Tab 4 with long width"
-                                    HorizontalAlignment="Center" />
-                                <Label Content=" " Grid.Row="2" Margin="6" Visibility="hidden" />
-                                <Button
-                                    Name="Btn_Popup_tab4_config" Grid.Row="3"
-                                    HorizontalAlignment="Center" Content="Tab 4 with inputs"
-                                    Width="270" ToolTip="Input Tab for 4" Margin="10,5"
-                                    IsEnabled="{Binding DataContext.ControlsEnabled, RelativeSource={RelativeSource FindAncestor, AncestorType=Window}}"
-                                    Style="{StaticResource MaterialDesignOutlinedDarkButton}"
-                                />
-                                <DatePicker
-                                    Name="DatePicker_certexpiration"
-                                    materialDesign:HintAssist.Hint="Pick expiration date"
-                                    materialDesign:HintAssist.FloatingOffset="0,-22"
-                                    materialDesign:HintAssist.HelperText="Cert expiration date"
-                                    Width="140"
-                                    Visibility="hidden"
-                                    Style="{StaticResource MaterialDesignOutlinedDatePicker}" />
-                            </Grid>
-                        </materialDesign:Card>
-                    </TabItem>
-
-                    <TabItem Header="[FAQs]    ">
-                        <materialDesign:Card>
-                            <StackPanel>
-                                <Expander
-                                    HorizontalAlignment="Stretch"
-                                    Header="Expander Example 2a">
-                                    <StackPanel
-                                        Margin="24,8,24,16"
-                                        Orientation="Vertical"
-                                        TextBlock.Foreground="{DynamicResource MaterialDesignBody}">
-                                        <TextBlock
-                                            Text="Your Content" />
-                                    </StackPanel>
-                                </Expander>
-                                <Border />
-                                <Expander
-                                    HorizontalAlignment="Stretch"
-                                    Header="Expander Example 2b">
-                                    <StackPanel
-                                        Margin="24,8,24,16"
-                                        Orientation="Vertical"
-                                        TextBlock.Foreground="{DynamicResource MaterialDesignBody}">
-                                        <TextBlock
-                                            Text="Your Content" />
-                                    </StackPanel>
-                                </Expander>
-                                <Border />
-                                <Expander
-                                    HorizontalAlignment="Stretch"
-                                    Header="Expander Example 2c">
-                                    <StackPanel
-                                        Margin="24,8,24,16"
-                                        Orientation="Vertical"
-                                        TextBlock.Foreground="{DynamicResource MaterialDesignBody}">
-                                        <TextBlock
-                                            Text="Your Content" />
-                                    </StackPanel>
-                                </Expander>
-                            </StackPanel>
-                        </materialDesign:Card>
-                    </TabItem>
-                </TabControl>
-            </Border>
+                <TabItem>
+                    <TabItem.Header>
+                        <StackPanel
+                            Width="auto"
+                            Height="auto">
+                            <materialDesign:PackIcon
+                                Width="24"
+                                Height="24"
+                                HorizontalAlignment="Center"
+                                Kind="FrequentlyAskedQuestions" />
+                            <TextBlock
+                                HorizontalAlignment="Center"
+                                Text="FAQs" />
+                        </StackPanel>
+                    </TabItem.Header>
+                    <materialDesign:Card>
+                        <StackPanel>
+                            <Expander
+                                HorizontalAlignment="Stretch"
+                                Header="Expander Example 2a">
+                                <StackPanel
+                                    Margin="24,8,24,16"
+                                    Orientation="Vertical"
+                                    TextBlock.Foreground="{DynamicResource MaterialDesignBody}">
+                                    <TextBlock
+                                        Text="Your Content" />
+                                </StackPanel>
+                            </Expander>
+                            <Border />
+                            <Expander
+                                HorizontalAlignment="Stretch"
+                                Header="Expander Example 2b">
+                                <StackPanel
+                                    Margin="24,8,24,16"
+                                    Orientation="Vertical"
+                                    TextBlock.Foreground="{DynamicResource MaterialDesignBody}">
+                                    <TextBlock
+                                        Text="Your Content" />
+                                </StackPanel>
+                            </Expander>
+                            <Border />
+                            <Expander
+                                HorizontalAlignment="Stretch"
+                                Header="Expander Example 2c">
+                                <StackPanel
+                                    Margin="24,8,24,16"
+                                    Orientation="Vertical"
+                                    TextBlock.Foreground="{DynamicResource MaterialDesignBody}">
+                                    <TextBlock
+                                        Text="Your Content" />
+                                </StackPanel>
+                            </Expander>
+                        </StackPanel>
+                    </materialDesign:Card>
+                </TabItem>
+            </TabControl>
         </Grid>
         <Grid>
             <StackPanel VerticalAlignment="Bottom">
                 <Button
                     Name="Btn_StartConfigJobs"
                     materialDesign:ButtonAssist.CornerRadius="10 10 0 0"
-                    IsEnabled="{Binding DataContext.ControlsEnabled, RelativeSource={RelativeSource FindAncestor, AncestorType=Window}}"
                     Width="150"
                     ToolTip="Runs all required module Configs"
                     Margin="0"
