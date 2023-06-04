@@ -8,7 +8,7 @@
     Width="450"
     Style="{DynamicResource MaterialDesignWindow}"
     WindowStartupLocation="CenterScreen"
-    ResizeMode="CanResize"
+    ResizeMode="NoResize"
     TextElement.Foreground="{DynamicResource MaterialDesignBody}"
     TextElement.FontSize="14"
     TextElement.FontFamily="Roboto"
@@ -16,7 +16,6 @@
     TextOptions.TextRenderingMode="Auto"
     Background="{DynamicResource MaterialDesignPaper}"
 >
-
     <Window.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
