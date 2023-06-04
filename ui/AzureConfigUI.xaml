@@ -42,7 +42,8 @@
             </ProgressBar>
         </Grid>
         <Grid Name="DarkBgOverlayLayer" Panel.ZIndex="999" Visibility="Collapsed" Background="Black"
-            Opacity="0.5"></Grid>
+            Opacity="0.5">
+        </Grid>
         <materialDesign:Card Name="HsmConfigLayer" Panel.ZIndex="1000" Visibility="Hidden"
             Height="500" Width="480" Margin="20" HorizontalAlignment="Center"
             VerticalAlignment="Center">
@@ -150,11 +151,19 @@
                     TabStripPlacement="Left">
                     <TabItem Header="Azure Hsm">
                         <Grid Margin="10">
-                            <Label Content="Azure Hsm CONFIG" FontWeight="Bold"
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                            </Grid.RowDefinitions>
+                            <Label Content="Azure Hsm CONFIG" Grid.Row="0" FontWeight="Bold"
                                 HorizontalAlignment="Center" Margin="6" />
-                            <Button Name="Btn_Popup_AZ_Inputs" HorizontalAlignment="Center"
-                                VerticalAlignment="center"
-                                Content="Set ur Hsm Config"
+                            <Label Content=" " Grid.Row="1" Margin="6" Visibility="hidden" />
+                            <Label Content=" " Grid.Row="2" Margin="6" Visibility="hidden" />
+                            <Button Name="Btn_Popup_AZ_Inputs" Grid.Row="3"
+                                HorizontalAlignment="Center"
+                                Content="Set your Azure Hsm Config"
                                 Width="270" ToolTip="Input your azure Configs" Margin="10,5" />
                         </Grid>
                     </TabItem>
