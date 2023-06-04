@@ -4,7 +4,7 @@
     xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
     Name="MainWindow"
     Title="EnvTools config"
-    Height="450"
+    Height="480"
     Width="450"
     Style="{DynamicResource MaterialDesignWindow}"
     WindowStartupLocation="CenterScreen"
@@ -148,39 +148,37 @@
             <Border CornerRadius="10" Background="White">
                 <TabControl Style="{StaticResource MaterialDesignFilledTabControl}"
                     TabStripPlacement="Left">
-                    <TabItem Header="Hsm CONFIG">
+                    <TabItem Header="Azure Hsm">
                         <Grid Margin="10">
                             <Label Content="Azure Hsm CONFIG" FontWeight="Bold"
-                                HorizontalAlignment="Center" Margin="5" />
-                            <StackPanel VerticalAlignment="Center">
-                                <Button Name="Btn_Popup_AZ_Inputs" Content="Add your Hsm cfg"
-                                    Width="150" ToolTip="Input your azure Configs" Margin="5" />
-                                <Button Name="Btn_StartConfigJobs" Content="Start AZ config"
-                                    Width="150" ToolTip="Start Azure Config" Margin="5" />
-                            </StackPanel>
+                                HorizontalAlignment="Center" Margin="6" />
+                            <Button Name="Btn_Popup_AZ_Inputs" HorizontalAlignment="Center"
+                                VerticalAlignment="center"
+                                Content="Set ur Hsm Config"
+                                Width="270" ToolTip="Input your azure Configs" Margin="10,5" />
                         </Grid>
                     </TabItem>
 
-                    <TabItem Header="User details">
+                    <TabItem Header="Azure User">
                         <Grid Margin="10">
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="Auto" />
                                 <RowDefinition Height="Auto" />
                             </Grid.RowDefinitions>
-                            <Label Content="Set your user details" Grid.Row="0" FontWeight="Bold"
+                            <Label Content="Azure user details" Grid.Row="0" FontWeight="Bold"
                                 HorizontalAlignment="Center" Margin="5" />
                             <TextBlock Margin="8" Grid.Row="1" Text="Enter your user details"
                                 HorizontalAlignment="Center" />
                         </Grid>
                     </TabItem>
 
-                    <TabItem Header="Git config">
+                    <TabItem Header="Git Repo">
                         <Grid Margin="10">
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="Auto" />
                                 <RowDefinition Height="Auto" />
                             </Grid.RowDefinitions>
-                            <Label Content="Set Git configs" Grid.Row="0" FontWeight="Bold"
+                            <Label Content="Git repo config" Grid.Row="0" FontWeight="Bold"
                                 HorizontalAlignment="Center" Margin="5" />
                             <TextBlock Margin="8" Grid.Row="1" Text="Configure your git repo"
                                 HorizontalAlignment="Center" />
@@ -216,10 +214,15 @@
             </Border>
         </Grid>
         <Grid>
-            <TextBox Name="TextBox_Output" Foreground="white" Background="Black"
-                Style="{StaticResource MaterialDesignOutlinedTextBox}" VerticalAlignment="Bottom"
-                Height="100" Width="400" AcceptsReturn="True" VerticalScrollBarVisibility="Auto"
-                Margin="5" />
+            <StackPanel VerticalAlignment="Bottom">
+                <Button Name="Btn_StartConfigJobs" Content="Start AZ config"
+                    Width="150" ToolTip="Start Azure Config" Margin="5" />
+                <TextBox Name="TextBox_Output" Foreground="white" Background="Black"
+                    Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                    VerticalAlignment="Bottom"
+                    Height="150" Width="400" AcceptsReturn="True" VerticalScrollBarVisibility="Auto"
+                    Margin="5" />
+            </StackPanel>
         </Grid>
     </Grid>
 </Window>
