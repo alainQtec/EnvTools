@@ -162,7 +162,10 @@
                             <Button Name="Btn_Popup_AZ_Inputs" Grid.Row="3"
                                 HorizontalAlignment="Center"
                                 Content="Set your Azure Hsm Config"
-                                Width="270" ToolTip="Input your azure Configs" Margin="10,5" />
+                                Width="270" ToolTip="Input your azure Configs" Margin="10,5"
+                                IsEnabled="{Binding DataContext.ControlsEnabled, RelativeSource={RelativeSource FindAncestor, AncestorType=Window}}"
+                                Style="{StaticResource MaterialDesignOutlinedDarkButton}"
+                            />
                         </Grid>
                     </TabItem>
 
@@ -181,8 +184,12 @@
                                 HorizontalAlignment="Center" />
                             <Label Content=" " Grid.Row="2" Margin="6" Visibility="hidden" />
                             <Button Name="Btn_Popup_AZ_user_Inputs" Grid.Row="3"
-                                HorizontalAlignment="Center" Content="Input your Azure user details"
-                                Width="270" ToolTip="Input your azure user Configs" Margin="10,5" />
+                                Content="Input your Azure user details"
+                                Width="270" ToolTip="Input your azure user Configs"
+                                Margin="10,5" HorizontalAlignment="Center"
+                                IsEnabled="{Binding DataContext.ControlsEnabled, RelativeSource={RelativeSource FindAncestor, AncestorType=Window}}"
+                                Style="{StaticResource MaterialDesignOutlinedDarkButton}"
+                            />
                         </Grid>
                     </TabItem>
 
@@ -200,9 +207,14 @@
                             <TextBlock Margin="8" Grid.Row="1" Text="Configure your git repo"
                                 HorizontalAlignment="Center" />
                             <Label Content=" " Grid.Row="2" Margin="6" Visibility="hidden" />
-                            <Button Name="Btn_Popup_git_repo_config" Grid.Row="3"
-                                HorizontalAlignment="Center" Content="Configure your git repo"
-                                Width="270" ToolTip="Input your github repo Configs" Margin="10,5" />
+                            <Button
+                                Name="Btn_Popup_git_repo_config" Grid.Row="3" Width="270"
+                                Content="Configure your git repo"
+                                IsEnabled="{Binding DataContext.ControlsEnabled, RelativeSource={RelativeSource FindAncestor, AncestorType=Window}}"
+                                HorizontalAlignment="Center"
+                                ToolTip="Input your github repo Configs" Margin="10,5"
+                                Style="{StaticResource MaterialDesignOutlinedDarkButton}"
+                            />
                         </Grid>
                     </TabItem>
 
@@ -220,9 +232,13 @@
                             <TextBlock Margin="8" Grid.Row="1" Text="Tab 4 with long width"
                                 HorizontalAlignment="Center" />
                             <Label Content=" " Grid.Row="2" Margin="6" Visibility="hidden" />
-                            <Button Name="Btn_Popup_tab4_config" Grid.Row="3"
+                            <Button
+                                Name="Btn_Popup_tab4_config" Grid.Row="3"
                                 HorizontalAlignment="Center" Content="Tab 4 with inputs"
-                                Width="270" ToolTip="Input Tab for 4" Margin="10,5" />
+                                Width="270" ToolTip="Input Tab for 4" Margin="10,5"
+                                IsEnabled="{Binding DataContext.ControlsEnabled, RelativeSource={RelativeSource FindAncestor, AncestorType=Window}}"
+                                Style="{StaticResource MaterialDesignOutlinedDarkButton}"
+                            />
                         </Grid>
                     </TabItem>
 
@@ -247,8 +263,16 @@
         </Grid>
         <Grid>
             <StackPanel VerticalAlignment="Bottom">
-                <Button Name="Btn_StartConfigJobs" Content="Run all configs"
-                    Width="150" ToolTip="Runs all required module Configs" Margin="5" />
+                <Button
+                    Name="Btn_StartConfigJobs"
+                    materialDesign:ButtonAssist.CornerRadius="10 10 0 0"
+                    IsEnabled="{Binding DataContext.ControlsEnabled, RelativeSource={RelativeSource FindAncestor, AncestorType=Window}}"
+                    Width="150"
+                    ToolTip="Runs all required module Configs"
+                    Margin="0"
+                    Padding="0">
+                    <TextBlock Text="Run all configs" />
+                </Button>
                 <TextBox Name="TextBox_Output" Foreground="white" Background="Black"
                     Style="{StaticResource MaterialDesignOutlinedTextBox}"
                     VerticalAlignment="Bottom"
