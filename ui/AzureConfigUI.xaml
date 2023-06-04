@@ -147,18 +147,12 @@
                 TabStripPlacement="Left">
                 <TabItem>
                     <TabItem.Header>
-                        <StackPanel
-                            Width="auto"
-                            Height="auto">
-                            <materialDesign:PackIcon
-                                Width="24"
-                                Height="24"
-                                HorizontalAlignment="Center"
-                                Kind="MicrosoftAzure" />
-                            <TextBlock
-                                HorizontalAlignment="Center"
-                                Text="Azure Hsm" />
-                        </StackPanel>
+                        <materialDesign:PackIcon
+                            Width="24"
+                            Height="24"
+                            ToolTip="Azure Hsm"
+                            HorizontalAlignment="Center"
+                            Kind="MicrosoftAzure" />
                     </TabItem.Header>
                     <materialDesign:Card>
                         <Grid Margin="10">
@@ -184,18 +178,12 @@
 
                 <TabItem>
                     <TabItem.Header>
-                        <StackPanel
-                            Width="auto"
-                            Height="auto">
-                            <materialDesign:PackIcon
-                                Width="24"
-                                Height="24"
-                                HorizontalAlignment="Center"
-                                Kind="AccountTie" />
-                            <TextBlock
-                                HorizontalAlignment="Center"
-                                Text="Azure User" />
-                        </StackPanel>
+                        <materialDesign:PackIcon
+                            Width="24"
+                            Height="24"
+                            ToolTip="Azure User"
+                            HorizontalAlignment="Center"
+                            Kind="AccountTie" />
                     </TabItem.Header>
                     <materialDesign:Card>
                         <Grid Margin="10">
@@ -223,18 +211,12 @@
 
                 <TabItem>
                     <TabItem.Header>
-                        <StackPanel
-                            Width="auto"
-                            Height="auto">
-                            <materialDesign:PackIcon
-                                Width="24"
-                                Height="24"
-                                HorizontalAlignment="Center"
-                                Kind="Git" />
-                            <TextBlock
-                                HorizontalAlignment="Center"
-                                Text="Git Repo" />
-                        </StackPanel>
+                        <materialDesign:PackIcon
+                            Width="24"
+                            Height="24"
+                            ToolTip="Git Repo"
+                            HorizontalAlignment="Center"
+                            Kind="Git" />
                     </TabItem.Header>
                     <materialDesign:Card>
                         <Grid Margin="10">
@@ -263,18 +245,12 @@
 
                 <TabItem>
                     <TabItem.Header>
-                        <StackPanel
-                            Width="auto"
-                            Height="auto">
-                            <materialDesign:PackIcon
-                                Width="24"
-                                Height="24"
-                                HorizontalAlignment="Center"
-                                Kind="Certificate" />
-                            <TextBlock
-                                HorizontalAlignment="Center"
-                                Text="Certs" />
-                        </StackPanel>
+                        <materialDesign:PackIcon
+                            Width="24"
+                            Height="24"
+                            ToolTip="Certificates"
+                            HorizontalAlignment="Center"
+                            Kind="Certificate" />
                     </TabItem.Header>
                     <materialDesign:Card>
                         <Grid Margin="10">
@@ -310,18 +286,12 @@
 
                 <TabItem>
                     <TabItem.Header>
-                        <StackPanel
-                            Width="auto"
-                            Height="auto">
-                            <materialDesign:PackIcon
-                                Width="24"
-                                Height="24"
-                                HorizontalAlignment="Center"
-                                Kind="FrequentlyAskedQuestions" />
-                            <TextBlock
-                                HorizontalAlignment="Center"
-                                Text="FAQs" />
-                        </StackPanel>
+                        <materialDesign:PackIcon
+                            Width="24"
+                            Height="24"
+                            ToolTip="FAQs"
+                            HorizontalAlignment="Center"
+                            Kind="FrequentlyAskedQuestions" />
                     </TabItem.Header>
                     <materialDesign:Card>
                         <StackPanel>
