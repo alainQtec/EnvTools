@@ -20,21 +20,21 @@ function New-Window {
         $XamlFile,
         [Switch]$NoSnackbar
     )
-        
+
     try {
         [xml]$Xaml = (Get-content $XamlFile)
         $Reader = New-Object System.Xml.XmlNodeReader $Xaml
         $Window = [Windows.Markup.XamlReader]::Load($Reader)
-        
+
         $Xaml.SelectNodes("//*[@Name]") | ForEach-Object { Set-Variable -Name ($_.Name) -Value $Window.FindName($_.Name) -Scope Script }
         # Objects that have to be declared before the window launches (will run in the same dispatcher thread as the window)
         if (!$NoSnackbar) {
             $Script:MessageQueue = [MaterialDesignThemes.Wpf.SnackbarMessageQueue]::new()
             $Script:MessageQueue.DiscardDuplicates = $true
         }
-        
+
         return $Window
-    } 
+    }
     catch {
         Write-Error "Error building Xaml data or loading window data.`n$_"
         exit
@@ -49,7 +49,7 @@ function New-Snackbar {
         $ButtonCaption
     )
     try {
-        if ($ButtonCaption) {       
+        if ($ButtonCaption) {
             $MessageQueue.Enqueue($Text, $ButtonCaption, { $null }, $null, $false, $false, [TimeSpan]::FromHours( 9999 ))
         }
         else {
@@ -93,11 +93,11 @@ function Get-SaveFilePath {
         $SaveFileDialog.OverwritePrompt = $True;
         $SaveFileDialog.ShowDialog() | Out-Null
         return $SaveFileDialog.filename
-    } 
+    }
     catch {
         Write-Error "Error in Get-SaveFilePath common function`n$_"
     }
-} 
+}
 
 function Get-OpenFilePath {
     # Opens a open-file windows dialog and returns the name and path of the file to be opened.
@@ -116,7 +116,7 @@ function Get-OpenFilePath {
     catch {
         Write-Error "Error in Get-OpenFilePath common function`n$_"
     }
-} 
+}
 
 function Open-File {
     # Opens a file and gets its content based on the FileType parameter. default is Get-Content.
@@ -147,12 +147,12 @@ function Open-File {
     }
 }
 
-function Set-CurrentCulture { 
+function Set-CurrentCulture {
     # Sets the PS Session's culture. All Time and Date UI controls will be effected by that. (DatePicker for example).
     param(
         $LCID = 2057
     )
-    #  2057 = English (UK)   ,  1033 = English (US)  
+    #  2057 = English (UK)   ,  1033 = English (US)
     $culture = [System.Globalization.CultureInfo]::GetCultureInfo($LCID)
     [System.Threading.Thread]::CurrentThread.CurrentUICulture = $culture
     [System.Threading.Thread]::CurrentThread.CurrentCulture = $culture
@@ -187,7 +187,7 @@ function Set-OutlinedProperty {
                 $UIObject.Opacity = $Opacity
             }
             $UIObject.VerticalContentAlignment = "Center"
-            
+
         }
     }
     catch {
@@ -205,7 +205,7 @@ function Set-ValidationError {
     )
     #https://coderedirect.com/questions/546371/setting-validation-error-template-from-code-in-wpf
     # !!! you must put  Text="{Binding txt}" in the textbox xaml code.
-    $ClassProperty = 
+    $ClassProperty =
     switch ($UIObject.GetType().name) {
         "TextBox" { [System.Windows.Controls.TextBox]::TextProperty }
         "ComboBox" { [System.Windows.Controls.ComboBox]::SelectedItemProperty }
@@ -223,7 +223,7 @@ function Set-ValidationError {
     [System.Windows.Data.BindingExpression]$bindingExpression = [System.Windows.Data.BindingOperations]::GetBindingExpression( $UIObject, $ClassProperty)
     [System.Windows.Data.BindingExpressionBase]$bindingExpressionBase = [System.Windows.Data.BindingOperations]::GetBindingExpressionBase($UIObject, $ClassProperty);
     [System.Windows.Controls.ValidationError]$validationError = [System.Windows.Controls.ValidationError]::new([System.Windows.Controls.ExceptionValidationRule]::New(), $bindingExpression)
-    
+
     <# This option will put the error message on either Absolute,AbsolutPoint,Bottom,Center,Custom,Left,Right,Top,MousePoint,Mouse,Relative,RelativePoint. Default is bottom.
     [MaterialDesignThemes.Wpf.ValidationAssist]::SetUsePopup($UIObject,$true)
     [MaterialDesignThemes.Wpf.ValidationAssist]::SetPopupPlacement($UIObject,[System.Windows.Controls.Primitives.PlacementMode]::Top)
@@ -249,10 +249,10 @@ function Confirm-RequiredField {
         $ErrorText = "This field is mandatory"
     )
     if (!$UI_Object.Text) {
-        Set-ValidationError -UIObject $UI_Object -ErrorText $ErrorText 
+        Set-ValidationError -UIObject $UI_Object -ErrorText $ErrorText
     }
     else {
-        Set-ValidationError -UIObject $UI_Object -ClearInvalid 
+        Set-ValidationError -UIObject $UI_Object -ClearInvalid
     }
 }
 
@@ -271,10 +271,10 @@ function Confirm-TextPatternField {
         }
     }
     if ($IsValid) {
-        Set-ValidationError -UIObject $UI_Object -ClearInvalid 
+        Set-ValidationError -UIObject $UI_Object -ClearInvalid
     }
     else {
-        Set-ValidationError -UIObject $UI_Object -ErrorText $ErrorText 
+        Set-ValidationError -UIObject $UI_Object -ErrorText $ErrorText
     }
 }
 
@@ -293,7 +293,7 @@ function  Confirm-TextInput {
     if ( ($UI_Object.text).length -lt $TextLength ) {
         $UI_Object.SelectionStart = $SelectionStart - 1
     }
-    else { $UI_Object.SelectionStart = $SelectionStart }     
+    else { $UI_Object.SelectionStart = $SelectionStart }
 }
 
 #endregion Common
@@ -365,7 +365,7 @@ $Btn_StartConfigJobs.Add_Click({
         $Runspace.ApartmentState = "STA"
         $Runspace.Open()
         $Runspace.SessionStateProxy.SetVariable("SyncHash", $SyncHash)
-        $Worker = [PowerShell]::Create().AddScript({ 
+        $Worker = [PowerShell]::Create().AddScript({
                 $RunspaceID = ([System.Management.Automation.Runspaces.Runspace]::DefaultRunSpace).id
                 $SyncHash.Window.Dispatcher.Invoke([action] { $SyncHash.TextBox_Output.AppendText("New Runspace ID: $RunspaceID`n") }, "Normal")
                 $Results = [System.Text.StringBuilder]::new()
@@ -431,7 +431,7 @@ $Btn_HsmConfigLayer_Close.Add_Click({
         $DarkBgOverlayLayer.Visibility = "Hidden"
         $HsmConfigLayer.Visibility = "Hidden"
         $MainWindow.Height = 450
-        $MainWindow.width = 430
+        $MainWindow.width = 450
     }
 )
 
