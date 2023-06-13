@@ -392,6 +392,8 @@ $Btn_StartConfigJobs.Add_Click({
         $Worker.BeginInvoke()
     }
 )
+
+# region    popup_cards
 $Btn_Popup_AZ_Inputs.Add_Click({
         $HsmConfigCard.IsEnabled = $true
         $Global:SyncHash = [hashtable]::Synchronized(@{
@@ -407,22 +409,6 @@ $Btn_Popup_AZ_Inputs.Add_Click({
         $MainWindow.width = 550
     }
 )
-$Btn_HsmConfigCard_Close.Add_Click({
-        $HsmConfigCard.IsEnabled = $false
-        $Global:SyncHash = [hashtable]::Synchronized(@{
-                Window              = $window
-                SpinnerOverlayLayer = $SpinnerOverlayLayer
-                TextBox_Output      = $TextBox_Output
-                ActiveConfigCard    = $HsmConfigCard
-            }
-        )
-        $DarkBgOverlayLayer.Visibility = "Hidden"
-        $HsmConfigCard.Visibility = "Hidden"
-        $MainWindow.Height = 460
-        $MainWindow.width = 450
-    }
-)
-
 $Btn_Popup_AZ_user_Inputs.Add_Click({
         $azUserConfigCard.IsEnabled = $true
         $Global:SyncHash = [hashtable]::Synchronized(@{
@@ -438,7 +424,55 @@ $Btn_Popup_AZ_user_Inputs.Add_Click({
         $MainWindow.width = 550
     }
 )
+$Btn_Popup_git_repo_config.Add_Click({
+        $gitConfigCard.IsEnabled = $true
+        $Global:SyncHash = [hashtable]::Synchronized(@{
+                Window              = $window
+                SpinnerOverlayLayer = $SpinnerOverlayLayer
+                TextBox_Output      = $TextBox_Output
+                ActiveConfigCard    = $gitConfigCard
+            }
+        )
+        $DarkBgOverlayLayer.Visibility = "Visible"
+        $gitConfigCard.Visibility = "Visible"
+        $MainWindow.Height = 700
+        $MainWindow.width = 550
+    }
+)
+$Btn_Popup_certificates_config.Add_Click({
+        $certConfigCard.IsEnabled = $true
+        $Global:SyncHash = [hashtable]::Synchronized(@{
+                Window              = $window
+                SpinnerOverlayLayer = $SpinnerOverlayLayer
+                TextBox_Output      = $TextBox_Output
+                ActiveConfigCard    = $certConfigCard
+            }
+        )
+        $DarkBgOverlayLayer.Visibility = "Visible"
+        $azUserConfigCard.Visibility = "Visible"
+        $MainWindow.Height = 700
+        $MainWindow.width = 550
+    }
+)
+# endregion popup_cards
 
+# region    close_buttons
+$Btn_HsmConfigCard_Close.Add_Click({
+        $HsmConfigCard.IsEnabled = $false
+        $Global:SyncHash = [hashtable]::Synchronized(@{
+                Window              = $window
+                SpinnerOverlayLayer = $SpinnerOverlayLayer
+                TextBox_Output      = $TextBox_Output
+                ActiveConfigCard    = $HsmConfigCard
+            }
+        )
+        $DarkBgOverlayLayer.Visibility = "Hidden"
+        $HsmConfigCard.Visibility = "Hidden"
+        $MainWindow.Height = 460
+        $MainWindow.width = 450
+    }
+)
+# endregion close_buttons
 $Window.ShowDialog() | Out-Null
 
 # user
