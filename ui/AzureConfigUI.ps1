@@ -338,14 +338,14 @@ class ObjectOutPut {
     <# Define the class. Try constructors, properties, or methods. #>
 }
 $Btn_StartConfigJobs.Add_Click({
-        $HsmConfigLayer.IsEnabled = $false
+        $HsmConfigCard.IsEnabled = $false
         $SpinnerOverlayLayer.Visibility = "Visible"
 
         $Global:SyncHash = [hashtable]::Synchronized(@{
                 Window              = $window
                 SpinnerOverlayLayer = $SpinnerOverlayLayer
                 TextBox_Output      = $TextBox_Output
-                HsmConfigLayer      = $HsmConfigLayer
+                HsmConfigCard       = $HsmConfigCard
             }
         )
         $Runspace = [runspacefactory]::CreateRunspace()
@@ -367,7 +367,7 @@ $Btn_StartConfigJobs.Add_Click({
                     $SyncHash.Window.Dispatcher.Invoke([action] { $SyncHash.TextBox_Output.AppendText($Results.ToString()) }, "Normal")
                 }
                 $SyncHash.Window.Dispatcher.Invoke([action] { $SyncHash.SpinnerOverlayLayer.Visibility = "Collapsed" }, "Normal")
-                $SyncHash.Window.Dispatcher.Invoke([action] { $SyncHash.HsmConfigLayer.IsEnabled = $true }, "Normal")
+                $SyncHash.Window.Dispatcher.Invoke([action] { $SyncHash.HsmConfigCard.IsEnabled = $true }, "Normal")
             }
         )
         $Worker.Runspace = $Runspace
@@ -393,31 +393,31 @@ $Btn_StartConfigJobs.Add_Click({
     }
 )
 $Btn_Popup_AZ_Inputs.Add_Click({
-        $HsmConfigLayer.IsEnabled = $true
+        $HsmConfigCard.IsEnabled = $true
         $Global:SyncHash = [hashtable]::Synchronized(@{
                 Window              = $window
                 SpinnerOverlayLayer = $SpinnerOverlayLayer
                 TextBox_Output      = $TextBox_Output
-                HsmConfigLayer      = $HsmConfigLayer
+                HsmConfigCard       = $HsmConfigCard
             }
         )
         $DarkBgOverlayLayer.Visibility = "Visible"
-        $HsmConfigLayer.Visibility = "Visible"
+        $HsmConfigCard.Visibility = "Visible"
         $MainWindow.Height = 700
         $MainWindow.width = 550
     }
 )
-$Btn_HsmConfigLayer_Close.Add_Click({
-        $HsmConfigLayer.IsEnabled = $false
+$Btn_HsmConfigCard_Close.Add_Click({
+        $HsmConfigCard.IsEnabled = $false
         $Global:SyncHash = [hashtable]::Synchronized(@{
                 Window              = $window
                 SpinnerOverlayLayer = $SpinnerOverlayLayer
                 TextBox_Output      = $TextBox_Output
-                HsmConfigLayer      = $HsmConfigLayer
+                HsmConfigCard       = $HsmConfigCard
             }
         )
         $DarkBgOverlayLayer.Visibility = "Hidden"
-        $HsmConfigLayer.Visibility = "Hidden"
+        $HsmConfigCard.Visibility = "Hidden"
         $MainWindow.Height = 460
         $MainWindow.width = 450
     }
