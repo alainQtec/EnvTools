@@ -367,7 +367,7 @@
                                 HorizontalAlignment="Center" />
                             <Label Content=" " Grid.Row="2" Margin="6" Visibility="hidden" />
                             <Button
-                                Name="Btn_Popup_tab4_config" Grid.Row="3"
+                                Name="Btn_Popup_certificates_config" Grid.Row="3"
                                 HorizontalAlignment="Center" Content="Set Private certificate"
                                 Width="270" ToolTip="Create or Import your Private certificate" Margin="10,5"
                                 Style="{StaticResource MaterialDesignOutlinedDarkButton}"
