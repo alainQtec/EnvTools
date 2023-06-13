@@ -3,7 +3,7 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
     Name="MainWindow"
-    Title="EnvTools v1.0.1"
+    Title="EnvTools HSM config"
     Height="480"
     Width="450"
     Style="{DynamicResource MaterialDesignWindow}"
@@ -150,7 +150,7 @@
                         <materialDesign:PackIcon
                             Width="24"
                             Height="24"
-                            ToolTip="Azure Hsm"
+                            ToolTip="Azure config for Hsm"
                             HorizontalAlignment="Center"
                             Kind="MicrosoftAzure" />
                     </TabItem.Header>
@@ -162,12 +162,12 @@
                                 <RowDefinition Height="Auto" />
                                 <RowDefinition Height="Auto" />
                             </Grid.RowDefinitions>
-                            <Label Content="Azure Hsm CONFIG" Grid.Row="0" FontWeight="Bold"
+                            <Label Content="Azure vault config" Grid.Row="0" FontWeight="Bold"
                                 HorizontalAlignment="Center" Margin="6" />
                             <Label Content=" " Grid.Row="1" Margin="6" Visibility="hidden" />
                             <Button Name="Btn_Popup_AZ_Inputs" Grid.Row="2"
                                 VerticalAlignment="center"
-                                Content="Set ur Hsm Config"
+                                Content="Set your Azure vault Config"
                                 Width="270" ToolTip="Input your azure Configs" Margin="10,5"
                                 HorizontalAlignment="Center"
                                 Style="{StaticResource MaterialDesignOutlinedDarkButton}"
