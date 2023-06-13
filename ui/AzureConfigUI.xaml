@@ -194,7 +194,7 @@
                                 <RowDefinition Height="Auto" />
                             </Grid.RowDefinitions>
 
-                            <Label Content="Azure user details" Grid.Row="0" FontWeight="Bold"
+                            <Label Content="Azure user" Grid.Row="0" FontWeight="Bold"
                                 HorizontalAlignment="Center" Margin="5" />
                             <TextBlock Margin="8" Grid.Row="1" Text="Enter your user details"
                                 HorizontalAlignment="Center" />
@@ -227,7 +227,7 @@
                                 <RowDefinition Height="Auto" />
                             </Grid.RowDefinitions>
 
-                            <Label Content="GitHub repo config" Grid.Row="0" FontWeight="Bold"
+                            <Label Content="Source control" Grid.Row="0" FontWeight="Bold"
                                 HorizontalAlignment="Center" Margin="5" />
                             <TextBlock Margin="8" Grid.Row="1" Text="Configure your git repo"
                                 HorizontalAlignment="Center" />
@@ -261,15 +261,15 @@
                                 <RowDefinition Height="Auto" />
                             </Grid.RowDefinitions>
 
-                            <Label Content="Tab 4" Grid.Row="0" FontWeight="Bold"
+                            <Label Content="Certificates" Grid.Row="0" FontWeight="Bold"
                                 HorizontalAlignment="Center" Margin="5" />
-                            <TextBlock Margin="8" Grid.Row="1" Text="Tab 4 with long width"
+                            <TextBlock Margin="8" Grid.Row="1" Text="Configure Public and Private Certificates"
                                 HorizontalAlignment="Center" />
                             <Label Content=" " Grid.Row="2" Margin="6" Visibility="hidden" />
                             <Button
                                 Name="Btn_Popup_tab4_config" Grid.Row="3"
-                                HorizontalAlignment="Center" Content="Tab 4 with inputs"
-                                Width="270" ToolTip="Input Tab for 4" Margin="10,5"
+                                HorizontalAlignment="Center" Content="Set Private certificate"
+                                Width="270" ToolTip="Create or Import your Private certificate" Margin="10,5"
                                 Style="{StaticResource MaterialDesignOutlinedDarkButton}"
                             />
                             <DatePicker
