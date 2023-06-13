@@ -43,7 +43,8 @@
         <Grid Name="DarkBgOverlayLayer" Panel.ZIndex="999" Visibility="Collapsed" Background="Black"
             Opacity="0.5">
         </Grid>
-        <materialDesign:Card Name="HsmConfigLayer" Panel.ZIndex="1000" Visibility="Hidden"
+        <!-- region PopUp_cards -->
+        <materialDesign:Card Name="HsmConfigCard" Panel.ZIndex="1000" Visibility="Hidden"
             Height="500" Width="480" Margin="20" HorizontalAlignment="Center"
             VerticalAlignment="Center">
             <Grid>
@@ -54,7 +55,7 @@
                 </Grid.RowDefinitions>
                 <TextBlock Text="Azure Hsm vault Config" Grid.Row="0" Padding="20" FontWeight="Bold"
                     Style="{StaticResource MaterialDesignHeadline5TextBlock}" />
-                <Button Name="Btn_HsmConfigLayer_Close" Width="25" Height="25" Content="x"
+                <Button Name="Btn_HsmConfigCard_Close" Width="25" Height="25" Content="x"
                     Grid.Row="0" HorizontalAlignment="Right" VerticalAlignment="Center"
                     Margin="0,0,10,0" ToolTip="Close">
                     <Button.Template>
@@ -142,6 +143,105 @@
                 </Grid>
             </Grid>
         </materialDesign:Card>
+        <materialDesign:Card Name="azUserConfigCard" Panel.ZIndex="1000" Visibility="Hidden"
+            Height="500" Width="480" Margin="20" HorizontalAlignment="Center"
+            VerticalAlignment="Center">
+            <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+            <TextBlock Text="Azure user Config" Grid.Row="0" Padding="20" FontWeight="Bold" Style="{StaticResource MaterialDesignHeadline5TextBlock}" />
+                <Button Name="Btn_azUserConfigCard_Close" Width="25" Height="25" Content="x"
+                    Grid.Row="0" HorizontalAlignment="Right" VerticalAlignment="Center"
+                    Margin="0,0,10,0" ToolTip="Close">
+                    <Button.Template>
+                        <ControlTemplate TargetType="{x:Type Button}">
+                            <Grid>
+                                <Ellipse Fill="{TemplateBinding Background}"
+                                    Stroke="{TemplateBinding BorderBrush}"
+                                    StrokeThickness="{TemplateBinding BorderThickness}" />
+                                <ContentPresenter HorizontalAlignment="Center"
+                                    VerticalAlignment="Center" />
+                            </Grid>
+                        </ControlTemplate>
+                    </Button.Template>
+                </Button>
+                <Grid Grid.Row="1" Name="azUserConfigForm" Margin="20">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+                </Grid>
+            </Grid>
+        </materialDesign:Card>
+        <materialDesign:Card Name="certConfigCard" Panel.ZIndex="1000" Visibility="Hidden"
+            Height="500" Width="480" Margin="20" HorizontalAlignment="Center"
+            VerticalAlignment="Center">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+                <TextBlock Text="private and public cert Config" Grid.Row="0" Padding="20" FontWeight="Bold"
+                    Style="{StaticResource MaterialDesignHeadline5TextBlock}" />
+                <Button Name="Btn_certConfigCard_Close" Width="25" Height="25" Content="x"
+                    Grid.Row="0" HorizontalAlignment="Right" VerticalAlignment="Center"
+                    Margin="0,0,10,0" ToolTip="Close">
+                    <Button.Template>
+                        <ControlTemplate TargetType="{x:Type Button}">
+                            <Grid>
+                                <Ellipse Fill="{TemplateBinding Background}"
+                                    Stroke="{TemplateBinding BorderBrush}"
+                                    StrokeThickness="{TemplateBinding BorderThickness}" />
+                                <ContentPresenter HorizontalAlignment="Center"
+                                    VerticalAlignment="Center" />
+                            </Grid>
+                        </ControlTemplate>
+                    </Button.Template>
+                </Button>
+                <Grid Grid.Row="1" Name="certConfigForm" Margin="20">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+                </Grid>
+            </Grid>
+        </materialDesign:Card>
+        <materialDesign:Card Name="gitConfigCard" Panel.ZIndex="1000" Visibility="Hidden"
+            Height="500" Width="480" Margin="20" HorizontalAlignment="Center"
+            VerticalAlignment="Center">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+                <TextBlock Text="gitHub Config" Grid.Row="0" Padding="20" FontWeight="Bold"
+                    Style="{StaticResource MaterialDesignHeadline5TextBlock}" />
+                <Button Name="Btn_gitConfigCard_Close" Width="25" Height="25" Content="x"
+                    Grid.Row="0" HorizontalAlignment="Right" VerticalAlignment="Center"
+                    Margin="0,0,10,0" ToolTip="Close">
+                    <Button.Template>
+                        <ControlTemplate TargetType="{x:Type Button}">
+                            <Grid>
+                                <Ellipse Fill="{TemplateBinding Background}"
+                                    Stroke="{TemplateBinding BorderBrush}"
+                                    StrokeThickness="{TemplateBinding BorderThickness}" />
+                                <ContentPresenter HorizontalAlignment="Center"
+                                    VerticalAlignment="Center" />
+                            </Grid>
+                        </ControlTemplate>
+                    </Button.Template>
+                </Button>
+                <Grid Grid.Row="1" Name="gitConfigForm" Margin="20">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+                </Grid>
+            </Grid>
+        </materialDesign:Card>
+        <!-- endregion PopUp_cards -->
         <Grid>
             <TabControl Style="{StaticResource MaterialDesignFilledTabControl}"
                 TabStripPlacement="Left">
