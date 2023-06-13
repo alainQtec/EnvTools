@@ -472,6 +472,51 @@ $Btn_HsmConfigCard_Close.Add_Click({
         $MainWindow.width = 450
     }
 )
+$Btn_azUserConfigCard_Close.Add_Click({
+        $azUserConfigCard.IsEnabled = $false
+        $Global:SyncHash = [hashtable]::Synchronized(@{
+                Window              = $window
+                SpinnerOverlayLayer = $SpinnerOverlayLayer
+                TextBox_Output      = $TextBox_Output
+                ActiveConfigCard    = $azUserConfigCard
+            }
+        )
+        $DarkBgOverlayLayer.Visibility = "Hidden"
+        $azUserConfigCard.Visibility = "Hidden"
+        $MainWindow.Height = 460
+        $MainWindow.width = 450
+    }
+)
+$Btn_certConfigCard_Close.Add_Click({
+        $certConfigCard.IsEnabled = $false
+        $Global:SyncHash = [hashtable]::Synchronized(@{
+                Window              = $window
+                SpinnerOverlayLayer = $SpinnerOverlayLayer
+                TextBox_Output      = $TextBox_Output
+                ActiveConfigCard    = $certConfigCard
+            }
+        )
+        $DarkBgOverlayLayer.Visibility = "Hidden"
+        $certConfigCard.Visibility = "Hidden"
+        $MainWindow.Height = 460
+        $MainWindow.width = 450
+    }
+)
+$Btn_gitConfigCard_Close.Add_Click({
+        $gitConfigCard.IsEnabled = $false
+        $Global:SyncHash = [hashtable]::Synchronized(@{
+                Window              = $window
+                SpinnerOverlayLayer = $SpinnerOverlayLayer
+                TextBox_Output      = $TextBox_Output
+                ActiveConfigCard    = $gitConfigCard
+            }
+        )
+        $DarkBgOverlayLayer.Visibility = "Hidden"
+        $gitConfigCard.Visibility = "Hidden"
+        $MainWindow.Height = 460
+        $MainWindow.width = 450
+    }
+)
 # endregion close_buttons
 $Window.ShowDialog() | Out-Null
 
