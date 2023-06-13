@@ -398,7 +398,7 @@ $Btn_Popup_AZ_Inputs.Add_Click({
                 Window              = $window
                 SpinnerOverlayLayer = $SpinnerOverlayLayer
                 TextBox_Output      = $TextBox_Output
-                HsmConfigCard       = $HsmConfigCard
+                ActiveConfigCard    = $HsmConfigCard
             }
         )
         $DarkBgOverlayLayer.Visibility = "Visible"
@@ -413,13 +413,29 @@ $Btn_HsmConfigCard_Close.Add_Click({
                 Window              = $window
                 SpinnerOverlayLayer = $SpinnerOverlayLayer
                 TextBox_Output      = $TextBox_Output
-                HsmConfigCard       = $HsmConfigCard
+                ActiveConfigCard    = $HsmConfigCard
             }
         )
         $DarkBgOverlayLayer.Visibility = "Hidden"
         $HsmConfigCard.Visibility = "Hidden"
         $MainWindow.Height = 460
         $MainWindow.width = 450
+    }
+)
+
+$Btn_Popup_AZ_user_Inputs.Add_Click({
+        $azUserConfigCard.IsEnabled = $true
+        $Global:SyncHash = [hashtable]::Synchronized(@{
+                Window              = $window
+                SpinnerOverlayLayer = $SpinnerOverlayLayer
+                TextBox_Output      = $TextBox_Output
+                ActiveConfigCard    = $azUserConfigCard
+            }
+        )
+        $DarkBgOverlayLayer.Visibility = "Visible"
+        $azUserConfigCard.Visibility = "Visible"
+        $MainWindow.Height = 700
+        $MainWindow.width = 550
     }
 )
 
