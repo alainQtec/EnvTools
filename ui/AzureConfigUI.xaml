@@ -256,29 +256,29 @@
                     </TabItem.Header>
                     <materialDesign:Card
                         Padding="0"
-                        Background="#03a9f4"
                         Foreground="{DynamicResource PrimaryHueDarkForegroundBrush}">
                         <Grid>
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="Auto" />
                                 <RowDefinition Height="Auto" />
                                 <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
                             </Grid.RowDefinitions>
                             <Label Content="Azure Hsm CONFIG" Grid.Row="0" FontWeight="Bold"
-                                Margin="16,16,16,4"
-                                Style="{StaticResource MaterialDesignHeadline5TextBlock}"
-                                HorizontalAlignment="Center" />
+                                Margin="16,16,16,4" HorizontalAlignment="Center" 
+                                 />
                             <Separator
                                 Grid.Row="1"
                                 Style="{StaticResource MaterialDesignLightSeparator}" />
                             <TextBlock
                                 Grid.Row="2"
                                 Margin="16,0,16,8"
-                                HorizontalAlignment="Left"
+                                Foreground="black"
+                                HorizontalAlignment="Center"
                                 VerticalAlignment="Center"
-                                Text="March 19, 2016" />
+                                Text="***********************" />
                             <StackPanel
-                                Grid.Row="2"
+                                Grid.Row="3"
                                 Margin="16,0,16,8"
                                 HorizontalAlignment="Right"
                                 Orientation="Horizontal">
@@ -391,14 +391,6 @@
                                 Width="270" ToolTip="Create or Import your Private certificate" Margin="10,5"
                                 Style="{StaticResource MaterialDesignOutlinedDarkButton}"
                             />
-                            <DatePicker
-                                Name="DatePicker_certexpiration"
-                                materialDesign:HintAssist.Hint="Pick expiration date"
-                                materialDesign:HintAssist.FloatingOffset="0,-22"
-                                materialDesign:HintAssist.HelperText="Cert expiration date"
-                                Width="140"
-                                Visibility="hidden"
-                                Style="{StaticResource MaterialDesignOutlinedDatePicker}" />
                         </Grid>
                     </materialDesign:Card>
                 </TabItem>
