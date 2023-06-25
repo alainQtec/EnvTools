@@ -254,24 +254,43 @@
                             HorizontalAlignment="Center"
                             Kind="MicrosoftAzure" />
                     </TabItem.Header>
-                    <materialDesign:Card>
-                        <Grid Margin="10">
+                    <materialDesign:Card
+                        Padding="0"
+                        Background="#03a9f4"
+                        Foreground="{DynamicResource PrimaryHueDarkForegroundBrush}">
+                        <Grid>
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="Auto" />
                                 <RowDefinition Height="Auto" />
                                 <RowDefinition Height="Auto" />
-                                <RowDefinition Height="Auto" />
                             </Grid.RowDefinitions>
-                            <Label Content="Azure vault config" Grid.Row="0" FontWeight="Bold"
-                                HorizontalAlignment="Center" Margin="6" />
-                            <Label Content=" " Grid.Row="1" Margin="6" Visibility="hidden" />
-                            <Button Name="Btn_Popup_AZ_Inputs" Grid.Row="2"
-                                VerticalAlignment="center"
-                                Content="Set your Azure vault Config"
-                                Width="270" ToolTip="Input your azure Configs" Margin="10,5"
-                                HorizontalAlignment="Center"
-                                Style="{StaticResource MaterialDesignOutlinedDarkButton}"
-                            />
+                            <Label Content="Azure Hsm CONFIG" Grid.Row="0" FontWeight="Bold"
+                                Margin="16,16,16,4"
+                                Style="{StaticResource MaterialDesignHeadline5TextBlock}"
+                                HorizontalAlignment="Center" />
+                            <Separator
+                                Grid.Row="1"
+                                Style="{StaticResource MaterialDesignLightSeparator}" />
+                            <TextBlock
+                                Grid.Row="2"
+                                Margin="16,0,16,8"
+                                HorizontalAlignment="Left"
+                                VerticalAlignment="Center"
+                                Text="March 19, 2016" />
+                            <StackPanel
+                                Grid.Row="2"
+                                Margin="16,0,16,8"
+                                HorizontalAlignment="Right"
+                                Orientation="Horizontal">
+                                <Button Name="Btn_Popup_AZ_Inputs"
+                                    materialDesign:RippleAssist.IsCentered="True"
+                                    VerticalAlignment="center"
+                                    Content="Set your azure Hsm Config"
+                                    Width="270" ToolTip="Input your azure Configs" Margin="10,5"
+                                    HorizontalAlignment="Center"
+                                    Style="{StaticResource MaterialDesignOutlinedDarkButton}"
+                                />
+                            </StackPanel>
                         </Grid>
                     </materialDesign:Card>
                 </TabItem>
