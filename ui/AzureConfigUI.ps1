@@ -14,6 +14,11 @@
 [regex]$Script:RegEx_EmailPattern = '^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$'
 [regex]$Script:RegEx_NumbersDash = '^[\-0-9]*$'
 
+enum ThemeMode {
+    Dark
+    Light
+}
+
 
 class MaterialUI {
     static $MessageQueue
@@ -87,11 +92,17 @@ class MaterialUI {
         }
         return [MaterialUI]::OpenFilePath
     }
-
+    static [System.Object] GetSystemTheme() {
+        # Will return "Dark" or "Light" based on the current apps theme mode set in windows OS
+        return (New-Object MaterialDesignThemes.Wpf.Theme)::GetSystemTheme()
+    }
+    static [System.Object] GetThemeMode($Window) {
+        # Returns the given app window theme mode ("Dark" or "Light")
+        return ([scriptblock]::Create('[MaterialDesignThemes.Wpf.ThemeExtensions]::GetBaseTheme($([MaterialDesignThemes.Wpf.ResourceDictionaryExtensions]::GetTheme($Window.Resources)))').Invoke())
+    }
 }
 
-
-function Set-ValidationError {
+function Set_ValidationError {
     # (1)Marks/Clears an element's validity, (2)Will return an element vaildity state, (3)Will set an error message for invalid element.
     param (
         $UIObject,
@@ -136,20 +147,20 @@ function Set-ValidationError {
 }
 
 function Confirm-RequiredField {
-    # Will call Set-ValidationError to Mark/Clear an element if its text is $null or not respectively.
+    # Will call Set_ValidationError to Mark/Clear an element if its text is $null or not respectively.
     param (
         $UI_Object = $this,
         $ErrorText = "This field is mandatory"
     )
     if (!$UI_Object.Text) {
-        Set-ValidationError -UIObject $UI_Object -ErrorText $ErrorText
+        Set_ValidationError -UIObject $UI_Object -ErrorText $ErrorText
     } else {
-        Set-ValidationError -UIObject $UI_Object -ClearInvalid
+        Set_ValidationError -UIObject $UI_Object -ClearInvalid
     }
 }
 
 function Confirm-TextPatternField {
-    # Will call Set-ValidationError to Mark/Clear an element if its text does not match or matches a regular expression respectively.
+    # Will call Set_ValidationError to Mark/Clear an element if its text does not match or matches a regular expression respectively.
     param (
         $UI_Object = $this,
         $ErrorText = "Invalid Value",
@@ -163,9 +174,9 @@ function Confirm-TextPatternField {
         }
     }
     if ($IsValid) {
-        Set-ValidationError -UIObject $UI_Object -ClearInvalid
+        Set_ValidationError -UIObject $UI_Object -ClearInvalid
     } else {
-        Set-ValidationError -UIObject $UI_Object -ErrorText $ErrorText
+        Set_ValidationError -UIObject $UI_Object -ErrorText $ErrorText
     }
 }
 
@@ -219,19 +230,7 @@ function  SetTheme {
     [void][MaterialDesignThemes.Wpf.ResourceDictionaryExtensions]::SetTheme($Window.Resources, $Theme)
 }
 
-function  Get-ThemeMode {
-    # Returns the given app window theme mode ("Dark" or "Light")
-    param(
-        $Window
-    )
-    $Theme = [MaterialDesignThemes.Wpf.ResourceDictionaryExtensions]::GetTheme($Window.Resources)
-    return [MaterialDesignThemes.Wpf.ThemeExtensions]::GetBaseTheme($Theme)
-}
 
-function Get-SystemTheme {
-    # Will return "Dark" or "Light" based on the current apps theme mode set in windows OS
-    return [MaterialDesignThemes.Wpf.Theme]::GetSystemTheme()
-}
 #endregion Theme
 
 $Window = [MaterialUI]::CreateWindow($(Get-Item -Path "$PSScriptRoot\AzureConfigUI.xaml"), $false)
