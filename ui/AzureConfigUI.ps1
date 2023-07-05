@@ -14,48 +14,34 @@
 [regex]$Script:RegEx_EmailPattern = '^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$'
 [regex]$Script:RegEx_NumbersDash = '^[\-0-9]*$'
 
-function New-Window {
-    # Sets a new WPF window from a xaml file and declares all named elements as variables. It will also optionally set a Snackbar Queue.
-    param (
-        $XamlFile,
-        [Switch]$NoSnackbar
-    )
 
-    try {
-        [xml]$Xaml = (Get-Content $XamlFile)
+class MaterialUI {
+    static $MessageQueue
+    MaterialUI() {}
+
+    static [System.Object] CreateWindow([IO.FileInfo]$XamlFile) {
+        return [MaterialUI]::CreateWindow($XamlFile, $true)
+    }
+    static [System.Object] CreateWindow([IO.FileInfo]$XamlFile, [bool]$NoSnackbar) {
+        [xml]$Xaml = (Get-Content -Path $XamlFile.FullName)
         $Reader = New-Object System.Xml.XmlNodeReader $Xaml
-        $Window = [Windows.Markup.XamlReader]::Load($Reader)
-
+        $Window = (New-Object Windows.Markup.XamlReader)::Load($Reader)
         $Xaml.SelectNodes("//*[@Name]") | ForEach-Object { Set-Variable -Name ($_.Name) -Value $Window.FindName($_.Name) -Scope Script }
         # Objects that have to be declared before the window launches (will run in the same dispatcher thread as the window)
         if (!$NoSnackbar) {
-            $Script:MessageQueue = [MaterialDesignThemes.Wpf.SnackbarMessageQueue]::new()
-            $Script:MessageQueue.DiscardDuplicates = $true
+            [MaterialUI]::MessageQueue = New-Object MaterialDesignThemes.Wpf.SnackbarMessageQueue
+            [MaterialUI]::MessageQueue.DiscardDuplicates = $true
         }
-
         return $Window
-    } catch {
-        Write-Error "Error building Xaml data or loading window data.`n$_"
-        exit
     }
-}
-
-function New-Snackbar {
     # Generates a Snackbar message with an optional button.
-    param (
-        $Snackbar,
-        $Text,
-        $ButtonCaption
-    )
-    try {
+    static [void]  CreateSnackbar($Snackbar, $Text, [bool]$ButtonCaption) {
         if ($ButtonCaption) {
-            $MessageQueue.Enqueue($Text, $ButtonCaption, { $null }, $null, $false, $false, [TimeSpan]::FromHours( 9999 ))
+            [MaterialUI]::MessageQueue.Enqueue($Text, $ButtonCaption, { $null }, $null, $false, $false, [TimeSpan]::FromHours( 9999 ))
         } else {
-            $MessageQueue.Enqueue($Text, $null, $null, $null, $false, $false, $null)
+            [MaterialUI]::MessageQueue.Enqueue($Text, $null, $null, $null, $false, $false, $null)
         }
-        $Snackbar.MessageQueue = $MessageQueue
-    } catch {
-        Write-Error "No MessageQueue was declared in the window. Make sure -NoSnackbar switch wasn't used in New-Window`n$_"
+        $Snackbar.MessageQueue = [MaterialUI]::MessageQueue
     }
 }
 
@@ -181,7 +167,6 @@ function Set-OutlinedProperty {
                 $UIObject.Opacity = $Opacity
             }
             $UIObject.VerticalContentAlignment = "Center"
-
         }
     } catch {
         Write-Error "Error in Set-OutlinedProperty common function`n$_"
@@ -211,7 +196,6 @@ function Set-ValidationError {
         #"RadioButton" {[System.Windows.Controls.RadioButton]::IsCheckedProperty}   Wasn't tested yet
         # "PasswordBox" {[system.Windows.Controls.PasswordBox]::Password}           Wasn't tested yet
         #"RichTextBox" {[System.Windows.Controls.RichTextBox]::Document}            Wasn't tested yet
-
     }
     [System.Windows.Data.BindingExpression]$bindingExpression = [System.Windows.Data.BindingOperations]::GetBindingExpression( $UIObject, $ClassProperty)
     [System.Windows.Data.BindingExpressionBase]$bindingExpressionBase = [System.Windows.Data.BindingOperations]::GetBindingExpressionBase($UIObject, $ClassProperty);
@@ -292,7 +276,7 @@ function  Confirm-TextInput {
 $ThemePrimaryColors.Sort()
 [System.Collections.ArrayList]$ThemeSecondaryColors = [System.Enum]::GetNames([MaterialDesignColors.SecondaryColor])
 $ThemeSecondaryColors.Sort()
-function  Set-Theme {
+function  SetTheme {
     # Sets the window theme colors and mode
     param(
         $Window,
@@ -332,7 +316,7 @@ function Get-SystemTheme {
 }
 #endregion Theme
 
-$Window = New-Window -XamlFile "$PSScriptRoot\AzureConfigUI.xaml"
+$Window = [MaterialUI]::CreateWindow($(Get-Item -Path "$PSScriptRoot\AzureConfigUI.xaml"), $false)
 $TextBox_Output.AppendText("Main Runspace ID: $(([System.Management.Automation.Runspaces.Runspace]::DefaultRunSpace).id)`n")
 class ObjectOutPut {
     <# Define the class. Try constructors, properties, or methods. #>
@@ -341,12 +325,13 @@ $Btn_StartConfigJobs.Add_Click({
         $HsmConfigCard.IsEnabled = $false
         $SpinnerOverlayLayer.Visibility = "Visible"
 
-        $Global:SyncHash = [hashtable]::Synchronized(@{
-                Window              = $window
-                SpinnerOverlayLayer = $SpinnerOverlayLayer
-                TextBox_Output      = $TextBox_Output
-                HsmConfigCard       = $HsmConfigCard
-            }
+        Set-Variable -Name SyncHash -Scope Global -Value $([hashtable]::Synchronized(@{
+                    Window              = $window
+                    SpinnerOverlayLayer = $SpinnerOverlayLayer
+                    TextBox_Output      = $TextBox_Output
+                    HsmConfigCard       = $HsmConfigCard
+                }
+            )
         )
         $Runspace = [runspacefactory]::CreateRunspace()
         $Runspace.ThreadOptions = "ReuseThread"
@@ -396,12 +381,13 @@ $Btn_StartConfigJobs.Add_Click({
 # region    popup_cards
 $Btn_Popup_AZ_Inputs.Add_Click({
         $HsmConfigCard.IsEnabled = $true
-        $Global:SyncHash = [hashtable]::Synchronized(@{
-                Window              = $window
-                SpinnerOverlayLayer = $SpinnerOverlayLayer
-                TextBox_Output      = $TextBox_Output
-                ActiveConfigCard    = $HsmConfigCard
-            }
+        Set-Variable -Name SyncHash -Scope Global -Value $([hashtable]::Synchronized(@{
+                    Window              = $window
+                    SpinnerOverlayLayer = $SpinnerOverlayLayer
+                    TextBox_Output      = $TextBox_Output
+                    ActiveConfigCard    = $HsmConfigCard
+                }
+            )
         )
         $DarkBgOverlayLayer.Visibility = "Visible"
         $HsmConfigCard.Visibility = "Visible"
@@ -411,12 +397,13 @@ $Btn_Popup_AZ_Inputs.Add_Click({
 )
 $Btn_Popup_AZ_user_Inputs.Add_Click({
         $azUserConfigCard.IsEnabled = $true
-        $Global:SyncHash = [hashtable]::Synchronized(@{
-                Window              = $window
-                SpinnerOverlayLayer = $SpinnerOverlayLayer
-                TextBox_Output      = $TextBox_Output
-                ActiveConfigCard    = $azUserConfigCard
-            }
+        Set-Variable -Name SyncHash -Scope Global -Value $([hashtable]::Synchronized(@{
+                    Window              = $window
+                    SpinnerOverlayLayer = $SpinnerOverlayLayer
+                    TextBox_Output      = $TextBox_Output
+                    ActiveConfigCard    = $azUserConfigCard
+                }
+            )
         )
         $DarkBgOverlayLayer.Visibility = "Visible"
         $azUserConfigCard.Visibility = "Visible"
@@ -426,12 +413,13 @@ $Btn_Popup_AZ_user_Inputs.Add_Click({
 )
 $Btn_Popup_git_repo_config.Add_Click({
         $gitConfigCard.IsEnabled = $true
-        $Global:SyncHash = [hashtable]::Synchronized(@{
-                Window              = $window
-                SpinnerOverlayLayer = $SpinnerOverlayLayer
-                TextBox_Output      = $TextBox_Output
-                ActiveConfigCard    = $gitConfigCard
-            }
+        Set-Variable -Name SyncHash -Scope Global -Value $([hashtable]::Synchronized(@{
+                    Window              = $window
+                    SpinnerOverlayLayer = $SpinnerOverlayLayer
+                    TextBox_Output      = $TextBox_Output
+                    ActiveConfigCard    = $gitConfigCard
+                }
+            )
         )
         $DarkBgOverlayLayer.Visibility = "Visible"
         $gitConfigCard.Visibility = "Visible"
@@ -441,12 +429,13 @@ $Btn_Popup_git_repo_config.Add_Click({
 )
 $Btn_Popup_certificates_config.Add_Click({
         $certConfigCard.IsEnabled = $true
-        $Global:SyncHash = [hashtable]::Synchronized(@{
-                Window              = $window
-                SpinnerOverlayLayer = $SpinnerOverlayLayer
-                TextBox_Output      = $TextBox_Output
-                ActiveConfigCard    = $certConfigCard
-            }
+        Set-Variable -Name SyncHash -Scope Global -Value $([hashtable]::Synchronized(@{
+                    Window              = $window
+                    SpinnerOverlayLayer = $SpinnerOverlayLayer
+                    TextBox_Output      = $TextBox_Output
+                    ActiveConfigCard    = $certConfigCard
+                }
+            )
         )
         $DarkBgOverlayLayer.Visibility = "Visible"
         $azUserConfigCard.Visibility = "Visible"
@@ -459,12 +448,13 @@ $Btn_Popup_certificates_config.Add_Click({
 # region    close_buttons
 $Btn_HsmConfigCard_Close.Add_Click({
         $HsmConfigCard.IsEnabled = $false
-        $Global:SyncHash = [hashtable]::Synchronized(@{
-                Window              = $window
-                SpinnerOverlayLayer = $SpinnerOverlayLayer
-                TextBox_Output      = $TextBox_Output
-                ActiveConfigCard    = $HsmConfigCard
-            }
+        Set-Variable -Name SyncHash -Scope Global -Value $([hashtable]::Synchronized(@{
+                    Window              = $window
+                    SpinnerOverlayLayer = $SpinnerOverlayLayer
+                    TextBox_Output      = $TextBox_Output
+                    ActiveConfigCard    = $HsmConfigCard
+                }
+            )
         )
         $DarkBgOverlayLayer.Visibility = "Hidden"
         $HsmConfigCard.Visibility = "Hidden"
@@ -474,12 +464,13 @@ $Btn_HsmConfigCard_Close.Add_Click({
 )
 $Btn_azUserConfigCard_Close.Add_Click({
         $azUserConfigCard.IsEnabled = $false
-        $Global:SyncHash = [hashtable]::Synchronized(@{
-                Window              = $window
-                SpinnerOverlayLayer = $SpinnerOverlayLayer
-                TextBox_Output      = $TextBox_Output
-                ActiveConfigCard    = $azUserConfigCard
-            }
+        Set-Variable -Name SyncHash -Scope Global -Value $([hashtable]::Synchronized(@{
+                    Window              = $window
+                    SpinnerOverlayLayer = $SpinnerOverlayLayer
+                    TextBox_Output      = $TextBox_Output
+                    ActiveConfigCard    = $azUserConfigCard
+                }
+            )
         )
         $DarkBgOverlayLayer.Visibility = "Hidden"
         $azUserConfigCard.Visibility = "Hidden"
@@ -489,12 +480,13 @@ $Btn_azUserConfigCard_Close.Add_Click({
 )
 $Btn_certConfigCard_Close.Add_Click({
         $certConfigCard.IsEnabled = $false
-        $Global:SyncHash = [hashtable]::Synchronized(@{
-                Window              = $window
-                SpinnerOverlayLayer = $SpinnerOverlayLayer
-                TextBox_Output      = $TextBox_Output
-                ActiveConfigCard    = $certConfigCard
-            }
+        Set-Variable -Name SyncHash -Scope Global -Value $([hashtable]::Synchronized(@{
+                    Window              = $window
+                    SpinnerOverlayLayer = $SpinnerOverlayLayer
+                    TextBox_Output      = $TextBox_Output
+                    ActiveConfigCard    = $certConfigCard
+                }
+            )
         )
         $DarkBgOverlayLayer.Visibility = "Hidden"
         $certConfigCard.Visibility = "Hidden"
@@ -504,12 +496,13 @@ $Btn_certConfigCard_Close.Add_Click({
 )
 $Btn_gitConfigCard_Close.Add_Click({
         $gitConfigCard.IsEnabled = $false
-        $Global:SyncHash = [hashtable]::Synchronized(@{
-                Window              = $window
-                SpinnerOverlayLayer = $SpinnerOverlayLayer
-                TextBox_Output      = $TextBox_Output
-                ActiveConfigCard    = $gitConfigCard
-            }
+        Set-Variable -Name SyncHash -Scope Global -Value $([hashtable]::Synchronized(@{
+                    Window              = $window
+                    SpinnerOverlayLayer = $SpinnerOverlayLayer
+                    TextBox_Output      = $TextBox_Output
+                    ActiveConfigCard    = $gitConfigCard
+                }
+            )
         )
         $DarkBgOverlayLayer.Visibility = "Hidden"
         $gitConfigCard.Visibility = "Hidden"
