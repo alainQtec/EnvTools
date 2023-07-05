@@ -17,6 +17,8 @@
 
 class MaterialUI {
     static $MessageQueue
+    static [string] $OpenFilePath
+    static $NavigationRailTab
     MaterialUI() {}
 
     static [System.Object] CreateWindow([IO.FileInfo]$XamlFile) {
@@ -43,135 +45,51 @@ class MaterialUI {
         }
         $Snackbar.MessageQueue = [MaterialUI]::MessageQueue
     }
-}
-
-function Set-NavigationRailTab {
-    # Accepts a TabControl and tab name parameters and sets the tab name as selected tab.
-    param (
-        $NavigationRail,
-        $TabName
-    )
-    $NavigationRail.SelectedIndex = [array]::IndexOf((($NavigationRail.Items | Select-Object -ExpandProperty name).toupper()), $TabName.ToUpper())
-}
-
-function Get-NavigationRailSelectedTabName {
-    # Returns the name of the current selected tab of a TabControl.
-    param (
-        $NavigationRail
-    )
-    return $NavigationRail.Items | Where-Object { $_.IsSelected -eq "True" } | Select-Object -ExpandProperty name
-}
-
-function Get-SaveFilePath {
-    # Opens a save-file windows dialog and returns the name and path of the file to be saved.
-    Param (
-        [string] $InitialDirectory,
-        [string] $Filter
-    )
-    try {
-        $SaveFileDialog = [Microsoft.Win32.SaveFileDialog]::New()
+    static [void] SetNavigationRailTab($NavigationRail, [string]$TabName) {
+        [MaterialUI]::NavigationRail = $NavigationRail
+        [MaterialUI]::NavigationRail.SelectedIndex = [array]::IndexOf((($NavigationRail.Items | Select-Object -ExpandProperty name).toupper()), $TabName.ToUpper())
+    }
+    [System.Object] GetSelectedTabControl() {
+        # Returns the name of the current selected tab of a TabControl.
+        return [MaterialUI]::NavigationRail.Items | Where-Object { $_.IsSelected -eq "True" } | Select-Object -ExpandProperty name
+    }
+    [string] GetSaveFilePath([string] $InitialDirectory, [string] $Filter) {
+        # Opens a save-file windows dialog and returns the name and path of the file to be saved.
+        $SaveFileDialog = New-Object Microsoft.Win32.SaveFileDialog
         $SaveFileDialog.initialDirectory = $InitialDirectory
         $SaveFileDialog.filter = $Filter
         $SaveFileDialog.CreatePrompt = $False;
         $SaveFileDialog.OverwritePrompt = $True;
         $SaveFileDialog.ShowDialog() | Out-Null
         return $SaveFileDialog.filename
-    } catch {
-        Write-Error "Error in Get-SaveFilePath common function`n$_"
     }
-}
-
-function Get-OpenFilePath {
-    # Opens a open-file windows dialog and returns the name and path of the file to be opened.
-    Param (
-        [string] $InitialDirectory,
-        [string] $Filter
-    )
-    try {
-        $OpenFileDialog = [Microsoft.Win32.OpenFileDialog]::New()
-        $OpenFileDialog.initialDirectory = $InitialDirectory
-        $OpenFileDialog.filter = $Filter
+    static [void] SetCurrentCulture () {
+        [MaterialUI]::SetCurrentCulture(2057)
+        #2057 = English (UK)   ,  1033 = English (US)
+    }
+    static [void] SetCurrentCulture ([int]$LCID) {
+        #Sets the PS Session's culture. All Time and Date UI controls will be effected by that. (DatePicker for example).
+        $culture = [System.Globalization.CultureInfo]::GetCultureInfo($LCID)
+        [System.Threading.Thread]::CurrentThread.CurrentUICulture = $culture
+        [System.Threading.Thread]::CurrentThread.CurrentCulture = $culture
+    }
+    static [void] OpenFileDialog([string]$InitialDirectory, [string]$Filter) {
+        $FileDialog = New-Object Microsoft.Win32.OpenFileDialog
+        $FileDialog.initialDirectory = $InitialDirectory
+        $FileDialog.filter = $Filter
         # Examples of other common filters: "Word Documents|*.doc|Excel Worksheets|*.xls|PowerPoint Presentations|*.ppt |Office Files|*.doc;*.xls;*.ppt |All Files|*.*"
-        $OpenFileDialog.ShowDialog() | Out-Null
-        return $OpenFileDialog.filename
-    } catch {
-        Write-Error "Error in Get-OpenFilePath common function`n$_"
+        $FileDialog.ShowDialog() | Out-Null
+        [MaterialUI]::OpenFilePath = $FileDialog.filename
     }
-}
-
-function Open-File {
-    # Opens a file and gets its content based on the FileType parameter. default is Get-Content.
-    param(
-        $Path,
-        $FileType
-    )
-    try {
-        if (!(Test-Path $Path)) {
-            Write-Error "File $Path not found"
-            return
+    [string] GetOpenFilePath() {
+        if ([string]::IsNullOrWhiteSpace([MaterialUI]::OpenFilePath)) {
+            [MaterialUI]::OpenFileDialog()
         }
-        switch ($FileType) {
-            "xml" {
-                [xml]$OutputFile = (Get-Content -Path $Path)
-            }
-            "csv" {
-                $OutputFile = (Import-Csv -Path $Path -Encoding UTF8)
-            }
-            default {
-                $OutputFile = (Get-Content -Path $Path)
-            }
-        }
-        return $OutputFile
-    } catch {
-        Write-Error "Error in Open-File common function`n$_"
+        return [MaterialUI]::OpenFilePath
     }
+
 }
 
-function Set-CurrentCulture {
-    # Sets the PS Session's culture. All Time and Date UI controls will be effected by that. (DatePicker for example).
-    param(
-        $LCID = 2057
-    )
-    #  2057 = English (UK)   ,  1033 = English (US)
-    $culture = [System.Globalization.CultureInfo]::GetCultureInfo($LCID)
-    [System.Threading.Thread]::CurrentThread.CurrentUICulture = $culture
-    [System.Threading.Thread]::CurrentThread.CurrentCulture = $culture
-}
-
-
-function Set-OutlinedProperty {
-    # Alters the visual style of some properties of a Material Design outlined UI control.
-    param (
-        [System.Management.Automation.PSObject[]]$InputObject,
-        $Padding, # "2"
-        $FloatingOffset, # "-15, 0"
-        $FloatingScale, # "1.2"
-        $Opacity, # "0.75"
-        $FontSize
-    )
-    try {
-        foreach ($UIObject in $InputObject) {
-            if ($Padding) {
-                $UIObject.padding = [System.Windows.Thickness]::new($Padding)
-            }
-            if ($FloatingOffset) {
-                [MaterialDesignThemes.Wpf.HintAssist]::SetFloatingOffset( $UIObject, $FloatingOffset)
-            }
-            if ($FloatingScale) {
-                [MaterialDesignThemes.Wpf.HintAssist]::SetFloatingScale( $UIObject, $FloatingScale)
-            }
-            if ($FontSize) {
-                $UIObject.FontSize = $FontSize
-            }
-            if ($Opacity) {
-                $UIObject.Opacity = $Opacity
-            }
-            $UIObject.VerticalContentAlignment = "Center"
-        }
-    } catch {
-        Write-Error "Error in Set-OutlinedProperty common function`n$_"
-    }
-}
 
 function Set-ValidationError {
     # (1)Marks/Clears an element's validity, (2)Will return an element vaildity state, (3)Will set an error message for invalid element.
