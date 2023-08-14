@@ -50,3 +50,7 @@ Get-EnvValues
 
 - **Compatibility issues**:
     Environment variables can behave differently on different platforms. For example, Windows and Unix-based systems have different ways of handling environment variables
+
+## **License**
+
+This module is licensed under the MIT [License](https://alainQtec.MIT-license.org).
