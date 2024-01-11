@@ -410,3 +410,8 @@ Tests/EnvTools.Module.Tests.ps1
 Tests/EnvTools.Features.Tests.ps1
 Tests/EnvTools.Intergration.Tests.ps1
 Tests/Resources/Test-GitHubScript.ps1
+
+# others
+
+Private/SECsc_tmp
+Private/sp_tmp
