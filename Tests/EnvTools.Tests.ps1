@@ -1,17 +1,18 @@
-$ModulePath = Split-Path -Path $PSScriptRoot -Parent
-$ModuleName = Split-Path -Path $ModulePath -Leaf
-# Make sure one or multiple versions of the module are not loaded
-Get-Module -Name $ModuleName | Remove-Module
+$ModuleName = (Get-Item $PSScriptRoot).Name
+$ModulePath = [IO.Path]::Combine($PSScriptRoot, "BuildOutput", $ModuleName) | Get-Item
+$moduleVersion = ((Get-ChildItem $ModulePath).Where({ $_.Name -as 'version' -is 'version'}).Name -as 'version[]' | Sort-Object -Descending)[0].ToString()
+Get-Module -Name $ModuleName | Remove-Module # Make sure no versions of the module are loaded
 
-# Import the module and store the information about the module
-$ModuleInformation = Import-Module -Name "$ModulePath\$ModuleName.psd1" -PassThru
+Write-Host "[+] Import the module and store the information about the module ..." -ForegroundColor Green
+$ModuleInformation = Import-Module -Name "$ModulePath" -PassThru
 $ModuleInformation | Format-List
 
-# Get the functions present in the Manifest
+Write-Host "[+] Get all functions present in the Manifest ..." -ForegroundColor Green
 $ExportedFunctions = $ModuleInformation.ExportedFunctions.Values.Name
 
-# Get the functions present in the Public folder
-$PS1Functions = Get-ChildItem -Path "$ModulePath\Public\*.ps1"
+Write-Host "[+] Get all functions present in the Public folder ..." -ForegroundColor Green
+$PS1Functions = Get-ChildItem -Path "$ModulePath\$moduleVersion\Public\*.ps1"
+
 
 Describe "$ModuleName Module - Testing Manifest File (.psd1)" {
     Context "Manifest" {
