@@ -10,8 +10,6 @@ It can securely read and write values in .env file using DPAPI or AES encryption
 Install-Module EnvTools
 ```
 
-You also need to run a one-time-only Configuration using [Initialize-EnvConfig](./Public/Initialize-EnvConfig.ps1) cmdlet.
-
 ## Features
 
 Make dealing with environment variables easier.
